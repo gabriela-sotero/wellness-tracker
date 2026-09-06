@@ -11,6 +11,7 @@ ConsoleUI::ConsoleUI(Database& database)
 void ConsoleUI::registerUser() {
     std::string username;
     std::string name;
+    char wantsWeight;
 
     std::cout << "Username: ";
     std::cin >> username;
@@ -18,7 +19,28 @@ void ConsoleUI::registerUser() {
     std::cout << "Name: ";
     std::cin >> name;
 
-    int userId = database.insertUser(username, name);
+    std::cout << "Do you want to provide your weight? (y/n): ";
+    std::cin >> wantsWeight;
+
+    int userId;
+
+    if (wantsWeight == 'y' || wantsWeight == 'Y') {
+        double weightKg;
+
+        std::cout << "Weight in kg: ";
+        std::cin >> weightKg;
+
+        userId = database.insertUser(
+            username,
+            name,
+            weightKg
+        );
+    } else {
+        userId = database.insertUser(
+            username,
+            name
+        );
+    }
 
     if (userId == -1) {
         std::cout << "Failed to create user.\n";
