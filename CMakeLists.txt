@@ -10,6 +10,7 @@ add_executable(wellness_tracker
     src/main.cpp
     src/User.cpp
     src/Database.cpp
+    src/ConsoleUI.cpp
 )
 
 target_include_directories(wellness_tracker PRIVATE include)
