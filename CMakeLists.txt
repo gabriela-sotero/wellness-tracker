@@ -9,6 +9,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(wellness_tracker
     src/main.cpp
     src/User.cpp
+    src/Database.cpp
 )
 
 target_include_directories(wellness_tracker PRIVATE include)
+
+find_package(SQLite3 REQUIRED)
+
+target_link_libraries(wellness_tracker PRIVATE SQLite3::SQLite3)
