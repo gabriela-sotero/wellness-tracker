@@ -7,14 +7,17 @@ int main() {
 
     database.createTables();
 
-    int userId = database.insertUser("Gabi");
+    int userId = database.insertUser(
+        "gabi",
+        "Gabi"
+    );
 
     if (userId == -1) {
         std::cout << "Failed to create user.\n";
         return 1;
     }
 
-    auto user = database.getUserById(userId);
+    auto user = database.getUserByUsername("gabi");
 
     if (!user.has_value()) {
         std::cout << "User not found.\n";
@@ -23,6 +26,7 @@ int main() {
 
     std::cout << "User found:\n";
     std::cout << "ID: " << user->getId() << '\n';
+    std::cout << "Username: " << user->getUsername() << '\n';
     std::cout << "Name: " << user->getName() << '\n';
 
     if (user->getWeightKg().has_value()) {

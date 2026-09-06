@@ -24,6 +24,7 @@ void Database::createTables() {
     const char* sql = R"(
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
             name TEXT NOT NULL,
             weight_kg REAL
         );
@@ -51,11 +52,13 @@ void Database::createTables() {
 }
 
 int Database::insertUser(
+    const std::string& username,
     const std::string& name,
     std::optional<double> weightKg
 ) {
     const char* sql =
-        "INSERT INTO users (name, weight_kg) VALUES (?, ?);";
+        "INSERT INTO users (username, name, weight_kg) "
+        "VALUES (?, ?, ?);";
 
     sqlite3_stmt* statement = nullptr;
 
@@ -70,13 +73,28 @@ int Database::insertUser(
     if (result != SQLITE_OK) {
         std::cerr << "Failed to prepare insert statement: "
                   << sqlite3_errmsg(db) << '\n';
-
         return -1;
     }
 
     result = sqlite3_bind_text(
         statement,
         1,
+        username.c_str(),
+        -1,
+        SQLITE_TRANSIENT
+    );
+
+    if (result != SQLITE_OK) {
+        std::cerr << "Failed to bind username: "
+                  << sqlite3_errmsg(db) << '\n';
+
+        sqlite3_finalize(statement);
+        return -1;
+    }
+
+    result = sqlite3_bind_text(
+        statement,
+        2,
         name.c_str(),
         -1,
         SQLITE_TRANSIENT
@@ -93,11 +111,11 @@ int Database::insertUser(
     if (weightKg.has_value()) {
         result = sqlite3_bind_double(
             statement,
-            2,
+            3,
             weightKg.value()
         );
     } else {
-        result = sqlite3_bind_null(statement, 2);
+        result = sqlite3_bind_null(statement, 3);
     }
 
     if (result != SQLITE_OK) {
@@ -128,7 +146,7 @@ int Database::insertUser(
 
 std::optional<User> Database::getUserById(int id) {
     const char* sql =
-        "SELECT id, name, weight_kg "
+        "SELECT id, username, name, weight_kg "
         "FROM users "
         "WHERE id = ?;";
 
@@ -152,9 +170,6 @@ std::optional<User> Database::getUserById(int id) {
     result = sqlite3_bind_int(statement, 1, id);
 
     if (result != SQLITE_OK) {
-        std::cerr << "Failed to bind user ID: "
-                  << sqlite3_errmsg(db) << '\n';
-
         sqlite3_finalize(statement);
         return std::nullopt;
     }
@@ -166,26 +181,111 @@ std::optional<User> Database::getUserById(int id) {
         return std::nullopt;
     }
 
-    int userId =
-        sqlite3_column_int(statement, 0);
+    int userId = sqlite3_column_int(statement, 0);
 
-    const unsigned char* nameText =
-        sqlite3_column_text(statement, 1);
+    std::string username =
+        reinterpret_cast<const char*>(
+            sqlite3_column_text(statement, 1)
+        );
 
     std::string name =
-        reinterpret_cast<const char*>(nameText);
+        reinterpret_cast<const char*>(
+            sqlite3_column_text(statement, 2)
+        );
 
     std::optional<double> weightKg = std::nullopt;
 
-    if (sqlite3_column_type(statement, 2) != SQLITE_NULL) {
-        weightKg = sqlite3_column_double(statement, 2);
+    if (sqlite3_column_type(statement, 3) != SQLITE_NULL) {
+        weightKg = sqlite3_column_double(statement, 3);
     }
 
     sqlite3_finalize(statement);
 
     if (weightKg.has_value()) {
-        return User(userId, name, weightKg.value());
+        return User(
+            userId,
+            username,
+            name,
+            weightKg.value()
+        );
     }
 
-    return User(userId, name);
+    return User(userId, username, name);
+}
+
+std::optional<User> Database::getUserByUsername(
+    const std::string& username
+) {
+    const char* sql =
+        "SELECT id, username, name, weight_kg "
+        "FROM users "
+        "WHERE username = ?;";
+
+    sqlite3_stmt* statement = nullptr;
+
+    int result = sqlite3_prepare_v2(
+        db,
+        sql,
+        -1,
+        &statement,
+        nullptr
+    );
+
+    if (result != SQLITE_OK) {
+        std::cerr << "Failed to prepare username query: "
+                  << sqlite3_errmsg(db) << '\n';
+
+        return std::nullopt;
+    }
+
+    result = sqlite3_bind_text(
+        statement,
+        1,
+        username.c_str(),
+        -1,
+        SQLITE_TRANSIENT
+    );
+
+    if (result != SQLITE_OK) {
+        sqlite3_finalize(statement);
+        return std::nullopt;
+    }
+
+    result = sqlite3_step(statement);
+
+    if (result != SQLITE_ROW) {
+        sqlite3_finalize(statement);
+        return std::nullopt;
+    }
+
+    int userId = sqlite3_column_int(statement, 0);
+
+    std::string storedUsername =
+        reinterpret_cast<const char*>(
+            sqlite3_column_text(statement, 1)
+        );
+
+    std::string name =
+        reinterpret_cast<const char*>(
+            sqlite3_column_text(statement, 2)
+        );
+
+    std::optional<double> weightKg = std::nullopt;
+
+    if (sqlite3_column_type(statement, 3) != SQLITE_NULL) {
+        weightKg = sqlite3_column_double(statement, 3);
+    }
+
+    sqlite3_finalize(statement);
+
+    if (weightKg.has_value()) {
+        return User(
+            userId,
+            storedUsername,
+            name,
+            weightKg.value()
+        );
+    }
+
+    return User(userId, storedUsername, name);
 }

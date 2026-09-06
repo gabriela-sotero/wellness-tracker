@@ -6,19 +6,32 @@
 class User {
 private:
     int id;
+    std::string username;
     std::string name;
     std::optional<double> weightKg;
 
 public:
-    // Name is passed by const reference to avoid an unnecessary string copy.
-    User(int id, const std::string& name);
+    // Username and name are passed by const reference to avoid unnecessary string copies.
+    User(
+        int id,
+        const std::string& username,
+        const std::string& name
+    );
 
     // Overloaded constructor used when the user also provides a weight.
-    User(int id, const std::string& name, double weightKg);
+    User(
+        int id,
+        const std::string& username,
+        const std::string& name,
+        double weightKg
+    );
 
     int getId() const;
 
     // First const protects the returned string; second const prevents this method from modifying the User.
+    const std::string& getUsername() const;
+
+
     const std::string& getName() const;
 
     // First const protects the returned optional; second const prevents this method from modifying the User.
