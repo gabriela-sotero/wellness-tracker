@@ -17,9 +17,14 @@ public:
     void createTables();
 
     int insertUser(
+        const std::string& username,
         const std::string& name,
         std::optional<double> weightKg = std::nullopt
     );
 
     std::optional<User> getUserById(int id);
+
+    std::optional<User> getUserByUsername(
+        const std::string& username
+    );
 };
