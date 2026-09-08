@@ -61,3 +61,13 @@ docs/specification.md
 🚧 In development.
 
 The project is currently in its initial structure and core modeling phase.
+
+## Build
+
+You'll need SQLite 3. 
+`cmake --build build && ./build/tests`
+
+## Tests
+
+Run unit tests with `cmake --build build && ./build/tests`
+
