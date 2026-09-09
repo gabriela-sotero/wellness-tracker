@@ -28,3 +28,7 @@ void WaterHabit::drankWater(int ml) {
     assert(ml >= 0 && "drankWater ml is negative");
     consumedMl += ml;
 }
+
+int WaterHabit::getConsumedMl() const {
+    return consumedMl;
+}

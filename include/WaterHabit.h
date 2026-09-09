@@ -14,4 +14,5 @@ public:
     std::string name() const override;
     
     void drankWater(int ml);
+    int getConsumedMl() const;
 };
