@@ -26,6 +26,11 @@ target_link_libraries(wellness_tracker PRIVATE wellness_core)
 
 # Unit tests
 enable_testing()
-add_executable(tests tests/test_main.cpp)
+add_executable(tests
+    tests/test_main.cpp
+    tests/test_water.cpp
+    tests/test_nutrition.cpp
+)
+
 target_link_libraries(tests PRIVATE wellness_core)
 add_test(NAME unit COMMAND tests)
