@@ -62,12 +62,64 @@ docs/specification.md
 
 The project is currently in its initial structure and core modeling phase.
 
+## Requirements
+
+- A C++20 compiler (GCC 13+ or Clang 16+)
+- CMake 3.16 or newer
+- SQLite 3 **development** package (the headers, not just the runtime library)
+
+On Debian / Ubuntu / Pop!_OS:
+
+```bash
+sudo apt install -y build-essential cmake libsqlite3-dev
+```
+
+On Fedora:
+
+```bash
+sudo dnf install -y gcc-c++ cmake sqlite-devel
+```
+
+On macOS (Homebrew):
+
+```bash
+brew install cmake sqlite
+```
+
 ## Build
 
-You'll need SQLite 3. 
-`cmake --build build && ./build/tests`
+The `build/` directory is not tracked by git, so configure it once after cloning:
+
+```bash
+cmake -S . -B build
+```
+
+Then compile (repeat this step after every change):
+
+```bash
+cmake --build build
+```
+
+## Run
+
+```bash
+./build/wellness_tracker
+```
 
 ## Tests
 
-Run unit tests with `cmake --build build && ./build/tests`
+```bash
+cmake --build build && ./build/tests
+```
 
+Or through CTest:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+## Troubleshooting
+
+- `Error: .../build is not a directory` — you skipped the configure step. Run `cmake -S . -B build` first.
+- `Could NOT find SQLite3 (missing: SQLite3_INCLUDE_DIR SQLite3_LIBRARY)` — the SQLite 3 headers are missing. Install `libsqlite3-dev` (see Requirements) and configure again.
+- To start from scratch, delete the directory and reconfigure: `rm -rf build && cmake -S . -B build`.
