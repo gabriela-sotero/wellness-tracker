@@ -14,11 +14,11 @@ add_library(wellness_core
     src/Database.cpp
     src/ConsoleUI.cpp
     src/WaterHabit.cpp
-    include/NutritionHabit.h
+    src/DailyRecord.cpp
     src/NutritionHabit.cpp
 )
 target_include_directories(wellness_core PUBLIC include)
-target_link_libraries(wellness_core PUBLIC SQLite3::SQLite3)
+target_link_libraries(wellness_core PUBLIC ${SQLite3_LIBRARIES})
 
 # CLI app
 add_executable(wellness_tracker src/main.cpp)
@@ -30,6 +30,7 @@ add_executable(tests
     tests/test_main.cpp
     tests/test_water.cpp
     tests/test_nutrition.cpp
+    tests/test_daily_record.cpp
 )
 
 target_link_libraries(tests PRIVATE wellness_core)
