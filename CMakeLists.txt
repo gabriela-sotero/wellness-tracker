@@ -16,6 +16,7 @@ add_library(wellness_core
     src/WaterHabit.cpp
     src/DailyRecord.cpp
     src/NutritionHabit.cpp
+    src/HabitService.cpp
 )
 target_include_directories(wellness_core PUBLIC include)
 target_link_libraries(wellness_core PUBLIC ${SQLite3_LIBRARIES})
