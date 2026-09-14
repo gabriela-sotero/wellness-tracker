@@ -4,12 +4,14 @@
 User::User(
     int id,
     const std::string& username,
-    const std::string& name
+    const std::string& name,
+    int waterGoalMl
 )
     : id(id),
       username(username),
       name(name),
-      weightKg(std::nullopt) {
+      weightKg(std::nullopt),
+      waterGoalMl(waterGoalMl) {
 }
 
 // Overloaded constructor for users who provide their weight.
@@ -17,12 +19,14 @@ User::User(
     int id,
     const std::string& username,
     const std::string& name,
+    int waterGoalMl,
     double weightKg
 )
     : id(id),
       username(username),
       name(name),
-      weightKg(weightKg) {
+      weightKg(weightKg),
+      waterGoalMl(waterGoalMl) {
 }
 
 int User::getId() const {
@@ -39,4 +43,8 @@ const std::string& User::getName() const {
 
 const std::optional<double>& User::getWeightKg() const {
     return weightKg;
+}
+
+int User::getWaterGoalMl() const {
+    return waterGoalMl;
 }

@@ -9,13 +9,15 @@ private:
     std::string username;
     std::string name;
     std::optional<double> weightKg;
+    int waterGoalMl;
 
 public:
     // Username and name are passed by const reference to avoid unnecessary string copies.
     User(
         int id,
         const std::string& username,
-        const std::string& name
+        const std::string& name,
+        int waterGoalMl
     );
 
     // Overloaded constructor used when the user also provides a weight.
@@ -23,6 +25,7 @@ public:
         int id,
         const std::string& username,
         const std::string& name,
+        int waterGoalMl,
         double weightKg
     );
 
@@ -36,4 +39,7 @@ public:
 
     // First const protects the returned optional; second const prevents this method from modifying the User.
     const std::optional<double>& getWeightKg() const;
+
+    // Daily water goal in ml (defaults to Constants::DEFAULT_WATER_GOAL_ML at registration).
+    int getWaterGoalMl() const;
 };

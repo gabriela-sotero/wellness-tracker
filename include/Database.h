@@ -5,6 +5,8 @@
 #include <string>
 
 #include "User.h"
+#include "DailyRecord.h"
+#include "Constants.h"
 
 class Database {
 private:
@@ -16,10 +18,24 @@ public:
 
     void createTables();
 
+    // Reads today's record for the user (seeding the consumed water) or,
+    // if none exists yet, returns a fresh zeroed record with the given goal.
+    // Read-only: the row is only created on saveDailyRecord.
+    DailyRecord loadOrCreateDailyRecord(
+        int userId,
+        const std::string& date,
+        int waterGoalMl
+    );
+
+    // Persists the record: ensures the daily_records row exists and upserts
+    // the water total into water_logs.
+    void saveDailyRecord(const DailyRecord& record);
+
     int insertUser(
         const std::string& username,
         const std::string& name,
-        std::optional<double> weightKg = std::nullopt
+        std::optional<double> weightKg = std::nullopt,
+        int waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML
     );
 
     std::optional<User> getUserById(int id);
