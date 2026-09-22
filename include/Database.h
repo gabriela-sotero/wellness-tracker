@@ -34,6 +34,7 @@ public:
     int insertUser(
         const std::string& username,
         const std::string& name,
+        const std::string& password,
         std::optional<double> weightKg = std::nullopt,
         int waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML
     );
@@ -42,5 +43,11 @@ public:
 
     std::optional<User> getUserByUsername(
         const std::string& username
+    );
+
+    // Returns the user when the password matches the stored hash, else nullopt.
+    std::optional<User> authenticate(
+        const std::string& username,
+        const std::string& password
     );
 };

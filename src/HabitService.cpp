@@ -22,3 +22,23 @@ void HabitService::logWaterHabit(int userId, int ml) const {
         return;
     }
 }
+
+int HabitService::dailyScore(int userId, const std::string& date) const {
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl());
+        return record.dailyScore();
+    }
+
+    return 0;
+}
+
+int HabitService::consumedWaterMl(int userId, const std::string& date) const {
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl());
+        return record.consumedWaterMl();
+    }
+
+    return 0;
+}

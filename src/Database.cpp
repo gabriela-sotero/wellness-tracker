@@ -1,6 +1,15 @@
 #include "Database.h"
 
+#include <functional>
 #include <iostream>
+
+namespace {
+    // Non-cryptographic hash, enough to understand the login flow.
+    // Swap for bcrypt/argon2 when real security is needed.
+    std::string hashPassword(const std::string& password) {
+        return std::to_string(std::hash<std::string>{}(password));
+    }
+}
 
 Database::Database(const std::string& path)
     : db(nullptr) {
@@ -28,6 +37,7 @@ void Database::createTables() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             name TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
             weight_kg REAL,
             water_goal_ml INTEGER NOT NULL DEFAULT 2000
         );
@@ -71,12 +81,13 @@ void Database::createTables() {
 int Database::insertUser(
     const std::string& username,
     const std::string& name,
+    const std::string& password,
     std::optional<double> weightKg,
     int waterGoalMl
 ) {
     const char* sql =
-        "INSERT INTO users (username, name, weight_kg, water_goal_ml) "
-        "VALUES (?, ?, ?, ?);";
+        "INSERT INTO users (username, name, password_hash, weight_kg, water_goal_ml) "
+        "VALUES (?, ?, ?, ?, ?);";
 
     sqlite3_stmt* statement = nullptr;
 
@@ -126,14 +137,32 @@ int Database::insertUser(
         return -1;
     }
 
+    std::string passwordHash = hashPassword(password);
+
+    result = sqlite3_bind_text(
+        statement,
+        3,
+        passwordHash.c_str(),
+        -1,
+        SQLITE_TRANSIENT
+    );
+
+    if (result != SQLITE_OK) {
+        std::cerr << "Failed to bind password: "
+                  << sqlite3_errmsg(db) << '\n';
+
+        sqlite3_finalize(statement);
+        return -1;
+    }
+
     if (weightKg.has_value()) {
         result = sqlite3_bind_double(
             statement,
-            3,
+            4,
             weightKg.value()
         );
     } else {
-        result = sqlite3_bind_null(statement, 3);
+        result = sqlite3_bind_null(statement, 4);
     }
 
     if (result != SQLITE_OK) {
@@ -144,7 +173,7 @@ int Database::insertUser(
         return -1;
     }
 
-    result = sqlite3_bind_int(statement, 4, waterGoalMl);
+    result = sqlite3_bind_int(statement, 5, waterGoalMl);
 
     if (result != SQLITE_OK) {
         std::cerr << "Failed to bind water goal: "
@@ -322,6 +351,57 @@ std::optional<User> Database::getUserByUsername(
     }
 
     return User(userId, storedUsername, name, waterGoalMl);
+}
+
+std::optional<User> Database::authenticate(
+    const std::string& username,
+    const std::string& password
+) {
+    const char* sql =
+        "SELECT password_hash FROM users WHERE username = ?;";
+
+    sqlite3_stmt* statement = nullptr;
+
+    int result = sqlite3_prepare_v2(
+        db,
+        sql,
+        -1,
+        &statement,
+        nullptr
+    );
+
+    if (result != SQLITE_OK) {
+        std::cerr << "Failed to prepare auth query: "
+                  << sqlite3_errmsg(db) << '\n';
+
+        return std::nullopt;
+    }
+
+    sqlite3_bind_text(
+        statement,
+        1,
+        username.c_str(),
+        -1,
+        SQLITE_TRANSIENT
+    );
+
+    if (sqlite3_step(statement) != SQLITE_ROW) {
+        sqlite3_finalize(statement);
+        return std::nullopt;
+    }
+
+    std::string storedHash =
+        reinterpret_cast<const char*>(
+            sqlite3_column_text(statement, 0)
+        );
+
+    sqlite3_finalize(statement);
+
+    if (storedHash != hashPassword(password)) {
+        return std::nullopt;
+    }
+
+    return getUserByUsername(username);
 }
 
 DailyRecord Database::loadOrCreateDailyRecord(

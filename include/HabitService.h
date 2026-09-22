@@ -10,4 +10,7 @@ class HabitService {
         HabitService(Database& database);
 
         void logWaterHabit(int userId, int ml) const;
+
+        int dailyScore(int userId, const std::string& date) const;
+        int consumedWaterMl(int userId, const std::string& date) const;
 };
