@@ -1,6 +1,7 @@
 #pragma once
 
 namespace Constants{
+    constexpr int DEFAULT_WATER_GOAL_ML = 2000; // Used when the user gives no goal.
     constexpr int WATER_MAX_SCORE = 500;
     constexpr int SLEEP_MAX_SCORE = 500;
     constexpr int EXERCISE_MAX_SCORE = 300;
