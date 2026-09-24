@@ -1,6 +1,9 @@
 #include "ConsoleUI.h"
 
+#include <cmath>
 #include <iostream>
+#include <limits>
+#include <sstream>
 #include <string>
 
 #include "Constants.h"
@@ -12,12 +15,12 @@ ConsoleUI::ConsoleUI(Database& database)
       currentUser(std::nullopt) {
 }
 
-// Handles user registration through the console interface.
-void ConsoleUI::registerUser() {
+// Handles user sign-up through the console interface.
+void ConsoleUI::signUpUser() {
     std::string username;
     std::string name;
     std::string password;
-    char wantsWeight;
+    std::string wantsWeight;
 
     std::cout << "Username: ";
     std::cin >> username;
@@ -28,25 +31,42 @@ void ConsoleUI::registerUser() {
     std::cout << "Password: ";
     std::cin >> password;
 
-    int waterGoalMl;
-    std::cout << "Daily water goal in ml (0 for default "
-              << Constants::DEFAULT_WATER_GOAL_ML << "): ";
-    std::cin >> waterGoalMl;
+    int waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML;
 
-    if (waterGoalMl <= 0) {
-        waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML;
+    while (true) {
+        std::cout << "Do you want to provide your weight? (y/n): ";
+        if (!(std::cin >> wantsWeight)) {
+            return;
+        }
+        if (wantsWeight == "y" || wantsWeight == "Y" ||
+            wantsWeight == "n" || wantsWeight == "N") {
+            break;
+        }
+        std::cout << "Please enter y or n.\n";
     }
-
-    std::cout << "Do you want to provide your weight? (y/n): ";
-    std::cin >> wantsWeight;
 
     int userId;
 
-    if (wantsWeight == 'y' || wantsWeight == 'Y') {
+    if (wantsWeight == "y" || wantsWeight == "Y") {
         double weightKg;
 
-        std::cout << "Weight in kg: ";
-        std::cin >> weightKg;
+        while (true) {
+            std::string input;
+            std::cout << "Weight in kg: ";
+            if (!(std::cin >> input)) {
+                return;
+            }
+
+            std::istringstream value(input);
+            if ((value >> weightKg) && value.eof() &&
+                std::isfinite(weightKg) && weightKg > 0 &&
+                weightKg <= std::numeric_limits<int>::max() / 35.0) {
+                break;
+            }
+            std::cout << "Please enter a valid positive number for your weight.\n";
+        }
+        waterGoalMl = static_cast<int>(weightKg * 35);
+        std::cout << "Your daily water goal is " << waterGoalMl << " ml.\n";
 
         userId = database.insertUser(
             username,
@@ -56,6 +76,33 @@ void ConsoleUI::registerUser() {
             waterGoalMl
         );
     } else {
+        if (wantsWeight == "n" || wantsWeight == "N") {
+            std::string wantsCustomGoal;
+            while (true) {
+                std::cout << "Do you want to personalize your water goal? (y/n): ";
+                if (!(std::cin >> wantsCustomGoal)) {
+                    return;
+                }
+                if (wantsCustomGoal == "y" || wantsCustomGoal == "Y" ||
+                    wantsCustomGoal == "n" || wantsCustomGoal == "N") {
+                    break;
+                }
+                std::cout << "Please enter y or n.\n";
+            }
+
+            if (wantsCustomGoal == "y" || wantsCustomGoal == "Y") {
+                std::cout << "Daily water goal in ml: ";
+                std::cin >> waterGoalMl;
+
+                if (waterGoalMl <= 0) {
+                    waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML;
+                }
+            } else if (wantsCustomGoal == "n" || wantsCustomGoal == "N") {
+                std::cout << "Your daily water goal will be "
+                          << Constants::DEFAULT_WATER_GOAL_ML << " ml by default.\n";
+            }
+        }
+
         userId = database.insertUser(
             username,
             name,
@@ -93,7 +140,7 @@ void ConsoleUI::loginUser() {
 
     currentUser = user;
 
-    std::cout << "Login successful.\n";
+    std::cout << "Log in successful.\n";
     std::cout << "Welcome, " << currentUser->getName() << "!\n";
 }
 
@@ -137,10 +184,10 @@ void ConsoleUI::logout() {
 }
 
 bool ConsoleUI::loggedOutMenu() {
-    int option;
+    std::string option;
 
-    std::cout << "\n1. Register\n";
-    std::cout << "2. Login\n";
+    std::cout << "\n1. Sign up\n";
+    std::cout << "2. Log in\n";
     std::cout << "0. Exit\n";
     std::cout << "Choose an option: ";
 
@@ -148,40 +195,40 @@ bool ConsoleUI::loggedOutMenu() {
         return false;
     }
 
-    if (option == 1) {
-        registerUser();
-    } else if (option == 2) {
+    if (option == "1") {
+        signUpUser();
+    } else if (option == "2") {
         loginUser();
-    } else if (option == 0) {
+    } else if (option == "0") {
         std::cout << "Goodbye!\n";
         return false;
     } else {
-        std::cout << "Invalid option.\n";
+        std::cout << "Invalid option. Please choose a valid option.\n";
     }
 
     return true;
 }
 
 bool ConsoleUI::loggedInMenu() {
-    int option;
+    std::string option;
 
     std::cout << "\n1. Log water\n";
     std::cout << "2. View my day\n";
-    std::cout << "0. Logout\n";
+    std::cout << "0. Log out\n";
     std::cout << "Choose an option: ";
 
     if (!(std::cin >> option)) {
         return false;
     }
 
-    if (option == 1) {
+    if (option == "1") {
         logWater();
-    } else if (option == 2) {
+    } else if (option == "2") {
         showDailyStats();
-    } else if (option == 0) {
+    } else if (option == "0") {
         logout();
     } else {
-        std::cout << "Invalid option.\n";
+        std::cout << "Invalid option. Please choose a valid option.\n";
     }
 
     return true;

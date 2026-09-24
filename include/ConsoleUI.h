@@ -13,7 +13,7 @@ private:
     std::optional<User> currentUser;   // set while a user is logged in
 
     // Logged-out actions.
-    void registerUser();
+    void signUpUser();
     void loginUser();
 
     // Logged-in actions.
