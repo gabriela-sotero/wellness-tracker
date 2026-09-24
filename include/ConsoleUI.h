@@ -14,12 +14,12 @@ private:
 
     // Logged-out actions.
     void signUpUser();
-    void loginUser();
+    void logInUser();
 
     // Logged-in actions.
     void logWater();
     void showDailyStats();
-    void logout();
+    void logOut();
 
     // Menus. Return false when the app should exit.
     bool loggedOutMenu();

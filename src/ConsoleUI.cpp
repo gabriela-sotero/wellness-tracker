@@ -121,7 +121,7 @@ void ConsoleUI::signUpUser() {
 }
 
 // Authenticates a user and starts a session on success.
-void ConsoleUI::loginUser() {
+void ConsoleUI::logInUser() {
     std::string username;
     std::string password;
 
@@ -178,7 +178,7 @@ void ConsoleUI::showDailyStats() {
     std::cout << "Daily points: " << score << "\n\n";
 }
 
-void ConsoleUI::logout() {
+void ConsoleUI::logOut() {
     currentUser = std::nullopt;
     std::cout << "Logged out.\n";
 }
@@ -198,7 +198,7 @@ bool ConsoleUI::loggedOutMenu() {
     if (option == "1") {
         signUpUser();
     } else if (option == "2") {
-        loginUser();
+        logInUser();
     } else if (option == "0") {
         std::cout << "Goodbye!\n";
         return false;
@@ -226,7 +226,7 @@ bool ConsoleUI::loggedInMenu() {
     } else if (option == "2") {
         showDailyStats();
     } else if (option == "0") {
-        logout();
+        logOut();
     } else {
         std::cout << "Invalid option. Please choose a valid option.\n";
     }
