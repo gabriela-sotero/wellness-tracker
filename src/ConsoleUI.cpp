@@ -19,20 +19,28 @@ ConsoleUI::ConsoleUI(Database& database)
 std::optional<bool> ConsoleUI::askYesNo(const std::string& question) {
     while (true) {
         std::string answer;
+
         std::cout << question << " (y/n): ";
+
         if (!(std::cin >> answer)) {
             return std::nullopt;
         }
-        if (answer == "y" || answer == "Y") {
+
+        for (char& character : answer) {
+            character = std::tolower(character);
+        }
+
+        if (answer == "y" || answer == "yes") {
             return true;
         }
-        if (answer == "n" || answer == "N") {
+
+        if (answer == "n" || answer == "no") {
             return false;
         }
-        std::cout << "Please enter y or n.\n";
+
+        std::cout << "Please enter yes or no.\n";
     }
 }
-
 // Handles user sign-up through the console interface.
 void ConsoleUI::signUpUser() {
     std::string username;
@@ -210,7 +218,7 @@ bool ConsoleUI::loggedOutMenu() {
         std::cout << "Goodbye!\n";
         return false;
     } else {
-        std::cout << "Invalid option. Please choose a valid option.\n";
+        std::cout << "Please choose a valid option.\n";
     }
 
     return true;
