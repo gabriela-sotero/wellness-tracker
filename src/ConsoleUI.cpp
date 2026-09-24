@@ -15,40 +15,56 @@ ConsoleUI::ConsoleUI(Database& database)
       currentUser(std::nullopt) {
 }
 
+// Returns no answer when the input stream closes.
+std::optional<bool> ConsoleUI::askYesNo(const std::string& question) {
+    while (true) {
+        std::string answer;
+        std::cout << question << " (y/n): ";
+        if (!(std::cin >> answer)) {
+            return std::nullopt;
+        }
+        if (answer == "y" || answer == "Y") {
+            return true;
+        }
+        if (answer == "n" || answer == "N") {
+            return false;
+        }
+        std::cout << "Please enter y or n.\n";
+    }
+}
+
 // Handles user sign-up through the console interface.
 void ConsoleUI::signUpUser() {
     std::string username;
     std::string name;
     std::string password;
-    std::string wantsWeight;
+    std::optional<double> weightKg;
 
     std::cout << "Username: ";
-    std::cin >> username;
+    if (!(std::cin >> username)) {
+        return;
+    }
+
+    if (database.getUserByUsername(username).has_value()) {
+        std::cout << "This username is already registered. Please log in.\n";
+        return;
+    }
 
     std::cout << "Name: ";
-    std::cin >> name;
+    std::getline(std::cin >> std::ws, name);
 
     std::cout << "Password: ";
     std::cin >> password;
 
     int waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML;
 
-    while (true) {
-        std::cout << "Do you want to provide your weight? (y/n): ";
-        if (!(std::cin >> wantsWeight)) {
-            return;
-        }
-        if (wantsWeight == "y" || wantsWeight == "Y" ||
-            wantsWeight == "n" || wantsWeight == "N") {
-            break;
-        }
-        std::cout << "Please enter y or n.\n";
+    auto wantsWeight = askYesNo("Do you want to provide your weight?");
+    if (!wantsWeight.has_value()) {
+        return;
     }
 
-    int userId;
-
-    if (wantsWeight == "y" || wantsWeight == "Y") {
-        double weightKg;
+    if (*wantsWeight) {
+        double enteredWeightKg;
 
         while (true) {
             std::string input;
@@ -58,59 +74,44 @@ void ConsoleUI::signUpUser() {
             }
 
             std::istringstream value(input);
-            if ((value >> weightKg) && value.eof() &&
-                std::isfinite(weightKg) && weightKg > 0 &&
-                weightKg <= std::numeric_limits<int>::max() / 35.0) {
+            if ((value >> enteredWeightKg) && value.eof() &&
+                std::isfinite(enteredWeightKg) && enteredWeightKg > 0 &&
+                enteredWeightKg <= std::numeric_limits<int>::max() /
+                    static_cast<double>(Constants::WATER_ML_PER_KG)) {
                 break;
             }
             std::cout << "Please enter a valid positive number for your weight.\n";
         }
-        waterGoalMl = static_cast<int>(weightKg * 35);
+        weightKg = enteredWeightKg;
+        waterGoalMl = static_cast<int>(enteredWeightKg * Constants::WATER_ML_PER_KG);
         std::cout << "Your daily water goal is " << waterGoalMl << " ml.\n";
-
-        userId = database.insertUser(
-            username,
-            name,
-            password,
-            weightKg,
-            waterGoalMl
-        );
     } else {
-        if (wantsWeight == "n" || wantsWeight == "N") {
-            std::string wantsCustomGoal;
-            while (true) {
-                std::cout << "Do you want to personalize your water goal? (y/n): ";
-                if (!(std::cin >> wantsCustomGoal)) {
-                    return;
-                }
-                if (wantsCustomGoal == "y" || wantsCustomGoal == "Y" ||
-                    wantsCustomGoal == "n" || wantsCustomGoal == "N") {
-                    break;
-                }
-                std::cout << "Please enter y or n.\n";
-            }
-
-            if (wantsCustomGoal == "y" || wantsCustomGoal == "Y") {
-                std::cout << "Daily water goal in ml: ";
-                std::cin >> waterGoalMl;
-
-                if (waterGoalMl <= 0) {
-                    waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML;
-                }
-            } else if (wantsCustomGoal == "n" || wantsCustomGoal == "N") {
-                std::cout << "Your daily water goal will be "
-                          << Constants::DEFAULT_WATER_GOAL_ML << " ml by default.\n";
-            }
+        auto wantsCustomGoal = askYesNo("Do you want to personalize your water goal?");
+        if (!wantsCustomGoal.has_value()) {
+            return;
         }
 
-        userId = database.insertUser(
-            username,
-            name,
-            password,
-            std::nullopt,
-            waterGoalMl
-        );
+        if (*wantsCustomGoal) {
+            while (true) {
+                std::string input;
+                std::cout << "Daily water goal in ml: ";
+                if (!(std::cin >> input)) {
+                    return;
+                }
+
+                std::istringstream value(input);
+                if ((value >> waterGoalMl) && value.eof() && waterGoalMl > 0) {
+                    break;
+                }
+                std::cout << "Please enter a positive whole number in ml.\n";
+            }
+        } else {
+            std::cout << "Your daily water goal will be "
+                      << Constants::DEFAULT_WATER_GOAL_ML << " ml by default.\n";
+        }
     }
+
+    int userId = database.insertUser(username, name, password, weightKg, waterGoalMl);
 
     if (userId == -1) {
         std::cout << "Failed to create user.\n";
@@ -148,12 +149,18 @@ void ConsoleUI::logInUser() {
 void ConsoleUI::logWater() {
     int ml;
 
-    std::cout << "How much water did you drink (ml)? ";
-    std::cin >> ml;
+    while (true) {
+        std::string input;
+        std::cout << "How much water did you drink (ml)? ";
+        if (!(std::cin >> input)) {
+            return;
+        }
 
-    if (ml <= 0) {
-        std::cout << "Please enter a positive amount.\n";
-        return;
+        std::istringstream value(input);
+        if ((value >> ml) && value.eof() && ml > 0) {
+            break;
+        }
+        std::cout << "Please enter a positive whole number in ml.\n";
     }
 
     habitService.logWaterHabit(currentUser->getId(), ml);

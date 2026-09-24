@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <string>
 
 #include "Database.h"
 #include "HabitService.h"
@@ -11,6 +12,8 @@ private:
     Database& database;
     HabitService habitService;
     std::optional<User> currentUser;   // set while a user is logged in
+
+    std::optional<bool> askYesNo(const std::string& question);
 
     // Logged-out actions.
     void signUpUser();
