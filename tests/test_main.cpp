@@ -3,12 +3,14 @@
 // These functions are implemented in the other test files.
 void runWaterTests();
 void runNutritionTests();
+void runExerciseTests();
 void runDailyRecordTests();
 void runHabitServiceTests();
 
 int main() {
     runWaterTests();
     runNutritionTests();
+    runExerciseTests();
     runDailyRecordTests();
     runHabitServiceTests();
 
