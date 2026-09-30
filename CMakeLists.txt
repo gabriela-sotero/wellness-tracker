@@ -15,6 +15,7 @@ add_library(wellness_core
     src/ConsoleUI.cpp
     src/WaterHabit.cpp
     src/ExerciseHabit.cpp
+    src/SleepHabit.cpp
     src/DailyRecord.cpp
     src/NutritionHabit.cpp
     src/HabitService.cpp
