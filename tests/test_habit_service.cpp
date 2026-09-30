@@ -33,6 +33,30 @@ static void test_log_water_accumulates_and_scores() {
            == (Constants::WATER_MAX_SCORE * 3) / 4);
 }
 
+// Meal counts and nutrition points persist through the daily record store.
+static void test_log_meals_accumulates_and_scores() {
+    Database db(":memory:");
+    db.createTables();
+
+    int userId = db.insertUser(
+        "carol", "Carol", "pw", std::nullopt, 2000);
+    assert(userId > 0);
+
+    HabitService service(db);
+    std::string date = util::today();
+
+    service.logMealHabit(userId, true);
+    service.logMealHabit(userId, false);
+    service.logMealHabit(userId, true);
+
+    NutritionSummary meals = service.nutritionSummary(userId, date);
+    assert(meals.healthyMeals == 2);
+    assert(meals.unhealthyMeals == 1);
+    assert(meals.points == (2 * Constants::NUTRITION_MAX_SCORE / 3)
+           - Constants::NUTRITION_UNHEALTHY_PENALTY);
+    assert(service.dailyScore(userId, date) == meals.points);
+}
+
 // Authentication succeeds only with the right username and password.
 static void test_authenticate() {
     Database db(":memory:");
@@ -46,5 +70,6 @@ static void test_authenticate() {
 
 void runHabitServiceTests() {
     test_log_water_accumulates_and_scores();
+    test_log_meals_accumulates_and_scores();
     test_authenticate();
 }

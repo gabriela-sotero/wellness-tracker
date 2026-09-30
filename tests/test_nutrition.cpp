@@ -24,8 +24,8 @@ static void test_nutrition_progress_and_cap() {
     // Uses a tolerance when comparing fractional values.
     assert(std::abs(n.progress() - 1.0 / 3.0) < 0.000001);
 
-    // One of three meals earns 50 points when the maximum is 100.
-    assert(n.calculateScore() == 50);
+    // One of three meals earns one third of the configured maximum.
+    assert(n.calculateScore() == Constants::NUTRITION_MAX_SCORE / goalMeals);
 
     n.logHealthyMeal();
     n.logHealthyMeal();
