@@ -214,7 +214,7 @@ void ConsoleUI::logSleep() {
     std::cout << "Logged " << hours << " hours of sleep.\n";
 }
 
-// Shows the logged-in user's day: goal, intake, progress and points.
+// Shows the logged-in user's day: goal, intake, progress and XP.
 void ConsoleUI::showDailyStats() {
     std::string date = util::today();
     int userId = currentUser->getId();
@@ -231,19 +231,19 @@ void ConsoleUI::showDailyStats() {
 
     std::cout << "\n--- My day (" << date << ") ---\n";
     std::cout << "Water intake: " << consumedMl << " / " << goalMl
-              << " ml (" << percent << "%) (" << waterPoints << " points)\n";
+              << " ml (" << percent << "%) (" << waterPoints << " XP)\n";
     std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
               << meals.unhealthyMeals << " unhealthy (" << meals.points
-              << " points)\n";
+              << " XP)\n";
     std::cout << "Exercise:     " << (exercise.completed ? "Completed" : "Not completed")
-              << " (" << exercise.points << " points)\n";
+              << " (" << exercise.points << " XP)\n";
     int sleepPercent = static_cast<int>(
         (sleep.hours * 100.0) / Constants::DEFAULT_SLEEP_GOAL_HOURS
     );
     std::cout << "Sleep:        " << sleep.hours << " / "
               << Constants::DEFAULT_SLEEP_GOAL_HOURS << " hours ("
-              << sleepPercent << "%) (" << sleep.points << " points)\n";
-    std::cout << "Daily points: " << score << "\n\n";
+              << sleepPercent << "%) (" << sleep.points << " XP)\n";
+    std::cout << "Daily XP: " << score << "\n\n";
 }
 
 void ConsoleUI::logOut() {

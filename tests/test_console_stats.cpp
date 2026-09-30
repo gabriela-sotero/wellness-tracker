@@ -5,7 +5,7 @@
 
 #include "ConsoleUI.h"
 
-static void test_daily_view_shows_each_habit_and_points_on_one_line() {
+static void test_daily_view_shows_each_habit_and_xp_on_one_line() {
     Database database(":memory:");
     database.createTables();
     ConsoleUI console(database);
@@ -38,17 +38,17 @@ static void test_daily_view_shows_each_habit_and_points_on_one_line() {
     std::cin.clear();
 
     const std::string screen = output.str();
-    assert(screen.find("Water intake: 1000 / 2000 ml (50%) (250 points)")
+    assert(screen.find("Water intake: 1000 / 2000 ml (50%) (250 XP)")
            != std::string::npos);
-    assert(screen.find("Meals:        1 healthy, 0 unhealthy (100 points)")
+    assert(screen.find("Meals:        1 healthy, 0 unhealthy (100 XP)")
            != std::string::npos);
-    assert(screen.find("Exercise:     Completed (300 points)")
+    assert(screen.find("Exercise:     Completed (300 XP)")
            != std::string::npos);
-    assert(screen.find("Sleep:        4 / 8 hours (50%) (250 points)")
+    assert(screen.find("Sleep:        4 / 8 hours (50%) (250 XP)")
            != std::string::npos);
-    assert(screen.find("Daily points: 900") != std::string::npos);
+    assert(screen.find("Daily XP: 900") != std::string::npos);
 }
 
 void runConsoleStatsTests() {
-    test_daily_view_shows_each_habit_and_points_on_one_line();
+    test_daily_view_shows_each_habit_and_xp_on_one_line();
 }
