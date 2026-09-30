@@ -192,6 +192,28 @@ void ConsoleUI::logExercise() {
     std::cout << "Exercise marked as completed.\n";
 }
 
+// Logs the number of hours slept today.
+void ConsoleUI::logSleep() {
+    double hours = 0.0;
+    while (true) {
+        std::string input;
+        std::cout << "How many hours did you sleep? ";
+        if (!(std::cin >> input)) {
+            return;
+        }
+
+        std::istringstream value(input);
+        if ((value >> hours) && value.eof() &&
+            std::isfinite(hours) && hours > 0.0) {
+            break;
+        }
+        std::cout << "Please enter a positive number of hours.\n";
+    }
+
+    habitService.logSleepHabit(currentUser->getId(), hours);
+    std::cout << "Logged " << hours << " hours of sleep.\n";
+}
+
 // Shows the logged-in user's day: goal, intake, progress and points.
 void ConsoleUI::showDailyStats() {
     std::string date = util::today();
@@ -201,6 +223,7 @@ void ConsoleUI::showDailyStats() {
     int consumedMl = habitService.consumedWaterMl(userId, date);
     NutritionSummary meals = habitService.nutritionSummary(userId, date);
     ExerciseSummary exercise = habitService.exerciseSummary(userId, date);
+    SleepSummary sleep = habitService.sleepSummary(userId, date);
     int score = habitService.dailyScore(userId, date);
 
     int percent = goalMl > 0 ? (consumedMl * 100) / goalMl : 0;
@@ -210,8 +233,15 @@ void ConsoleUI::showDailyStats() {
               << " ml (" << percent << "%)\n";
     std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
               << meals.unhealthyMeals << " unhealthy\n";
+    std::cout << "Meal points:  " << meals.points << "\n";
     std::cout << "Exercise:     " << (exercise.completed ? "Completed" : "Not completed")
-              << "\n";
+              << " (" << exercise.points << " points)\n";
+    int sleepPercent = static_cast<int>(
+        (sleep.hours * 100.0) / Constants::DEFAULT_SLEEP_GOAL_HOURS
+    );
+    std::cout << "Sleep:        " << sleep.hours << " / "
+              << Constants::DEFAULT_SLEEP_GOAL_HOURS << " hours ("
+              << sleepPercent << "%, " << sleep.points << " points)\n";
     std::cout << "Daily points: " << score << "\n\n";
 }
 
@@ -278,7 +308,7 @@ bool ConsoleUI::loggedInMenu() {
         } else if (action == "3") {
             logExercise();
         } else if (action == "4") {
-            std::cout << "This action is not available yet.\n";
+            logSleep();
         } else if (action != "0") {
             std::cout << "Invalid action. Please choose a valid option.\n";
         }

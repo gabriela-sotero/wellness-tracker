@@ -8,6 +8,7 @@ DailyRecord::DailyRecord(
     water(dailyGoalMl),
     nutrition(3),
     exercise(),
+    sleep(),
     date(date),
     userId(userId) {
 }
@@ -44,9 +45,17 @@ void DailyRecord::seedExercise(bool completed) {
     }
 }
 
+void DailyRecord::logSleep(double hours) {
+    sleep.logSleep(hours);
+}
+
+void DailyRecord::seedSleep(double hours) {
+    sleep.logSleep(hours);
+}
+
 int DailyRecord::dailyScore() const{
     return water.calculateScore() + nutrition.calculateScore()
-        + exercise.calculateScore();
+        + exercise.calculateScore() + sleep.calculateScore();
 }
 
 int DailyRecord::nutritionScore() const {
@@ -59,6 +68,14 @@ int DailyRecord::exerciseScore() const {
 
 bool DailyRecord::exerciseCompleted() const {
     return exercise.isCompleted();
+}
+
+double DailyRecord::sleptHours() const {
+    return sleep.getSleptHours();
+}
+
+int DailyRecord::sleepScore() const {
+    return sleep.calculateScore();
 }
 
 int DailyRecord::consumedWaterMl() const {
