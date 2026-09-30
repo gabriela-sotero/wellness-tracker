@@ -12,7 +12,10 @@ find_package(SQLite3 REQUIRED)
 add_library(wellness_core
     src/User.cpp
     src/Database.cpp
-    src/ConsoleUI.cpp
+    src/ConsoleUIMenus.cpp
+    src/ConsoleUIAuth.cpp
+    src/ConsoleUIHabits.cpp
+    src/ConsoleUIProgress.cpp
     src/WaterHabit.cpp
     src/ExerciseHabit.cpp
     src/SleepHabit.cpp

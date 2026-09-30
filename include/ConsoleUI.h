@@ -26,7 +26,12 @@ private:
     void logSleep();
     void showDailyStats();
     void showProfile();
-    void showPeriodStats(const std::string& period, int daysBack, bool calendarMonth, bool calendarYear);
+    void showPeriodStats(
+        const std::string& period,
+        int daysBack,
+        bool calendarMonth,
+        bool calendarYear
+    );
     void showHistoryMenu();
     void logOut();
 
