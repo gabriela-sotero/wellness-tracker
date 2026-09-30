@@ -210,9 +210,8 @@ void ConsoleUI::showDailyStats() {
               << " ml (" << percent << "%)\n";
     std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
               << meals.unhealthyMeals << " unhealthy\n";
-    std::cout << "Meal points:  " << meals.points << "\n";
-    std::cout << "Exercise:     " << (exercise.completed ? "completed" : "not completed")
-              << " (" << exercise.points << " points)\n";
+    std::cout << "Exercise:     " << (exercise.completed ? "Completed" : "Not completed")
+              << "\n";
     std::cout << "Daily points: " << score << "\n\n";
 }
 
