@@ -9,7 +9,7 @@ The project is being developed for an Object-Oriented Data Structures course, wi
 - Manually implemented data structures
 - Data persistence
 - Clean separation between core logic and user interface
-- Future migration to Qt
+- Console and Qt Widgets interfaces
 
 ## Tracked Habits
 
@@ -67,7 +67,7 @@ The project is currently in its initial structure and core modeling phase.
 - A C++20 compiler (GCC 13+ or Clang 16+)
 - CMake 3.16 or newer
 - SQLite 3 **development** package (the headers, not just the runtime library)
-- Qt 6 Widgets (optional; needed only for the graphical login app)
+- Qt 6 Widgets (optional; needed only for the graphical app)
 
 On Debian / Ubuntu / Pop!_OS:
 
@@ -75,10 +75,22 @@ On Debian / Ubuntu / Pop!_OS:
 sudo apt install -y build-essential cmake libsqlite3-dev
 ```
 
+To build the graphical app on Debian / Ubuntu / Pop!_OS, also install Qt Widgets:
+
+```bash
+sudo apt install -y qt6-base-dev
+```
+
 On Fedora:
 
 ```bash
 sudo dnf install -y gcc-c++ cmake sqlite-devel
+```
+
+For the graphical app, also install Qt Widgets:
+
+```bash
+sudo dnf install -y qt6-qtbase-devel
 ```
 
 On macOS (Homebrew):
@@ -101,17 +113,28 @@ Then compile (repeat this step after every change):
 cmake --build build
 ```
 
-## Run
+## Run the console app
 
 ```bash
 ./build/wellness_tracker
 ```
 
-When Qt 6 is installed, CMake also builds the graphical login app:
+## Run the graphical app
+
+Install Qt 6 Widgets for your operating system, then configure the project. CMake checks for Qt during configuration, so repeat this step if you install Qt after configuring:
 
 ```bash
+cmake -S . -B build
+```
+
+Build and launch the GUI:
+
+```bash
+cmake --build build --target wellness_gui
 ./build/wellness_gui
 ```
+
+The first screen offers **Log in** and **Create an account**. The GUI stores accounts in the same `data/wellness.db` database as the console app.
 
 ## Tests
 
@@ -129,4 +152,5 @@ ctest --test-dir build --output-on-failure
 
 - `Error: .../build is not a directory` — you skipped the configure step. Run `cmake -S . -B build` first.
 - `Could NOT find SQLite3 (missing: SQLite3_INCLUDE_DIR SQLite3_LIBRARY)` — the SQLite 3 headers are missing. Install `libsqlite3-dev` (see Requirements) and configure again.
+- `Skipping the wellness_gui target` — Qt 6 Widgets was not found when CMake configured the project. Install Qt 6 Widgets, then rerun `cmake -S . -B build`.
 - To start from scratch, delete the directory and reconfigure: `rm -rf build && cmake -S . -B build`.
