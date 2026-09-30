@@ -18,4 +18,6 @@ public:
 
     void logHealthyMeal();
     void logUnhealthyMeal();
+    int healthyMealCount() const;
+    int unhealthyMealCount() const;
 };

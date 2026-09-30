@@ -24,6 +24,14 @@ void NutritionHabit::logUnhealthyMeal() {
     unhealthyMeals += 1;
 }
 
+int NutritionHabit::healthyMealCount() const {
+    return healthyMeals;
+}
+
+int NutritionHabit::unhealthyMealCount() const {
+    return unhealthyMeals;
+}
+
 double NutritionHabit::progress() const {
     double ratio = static_cast<double>(healthyMeals) / mealGoal;
     return std::min(ratio, 1.0);

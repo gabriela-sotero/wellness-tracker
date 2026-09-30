@@ -18,8 +18,8 @@ public:
 
     void createTables();
 
-    // Reads today's record for the user (seeding the consumed water) or,
-    // if none exists yet, returns a fresh zeroed record with the given goal.
+    // Reads the user's record, restoring water and meal totals, or returns a
+    // fresh zeroed record with the given water goal when no record exists.
     // Read-only: the row is only created on saveDailyRecord.
     DailyRecord loadOrCreateDailyRecord(
         int userId,
@@ -28,7 +28,7 @@ public:
     );
 
     // Persists the record: ensures the daily_records row exists and upserts
-    // the water total into water_logs.
+    // water and meal totals into their daily log tables.
     void saveDailyRecord(const DailyRecord& record);
 
     int insertUser(

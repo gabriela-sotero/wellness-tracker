@@ -175,6 +175,17 @@ void ConsoleUI::logWater() {
     std::cout << "Logged " << ml << " ml of water.\n";
 }
 
+// Logs one meal and records whether it was healthy.
+void ConsoleUI::logMeal() {
+    auto healthy = askYesNo("Was this a healthy meal?");
+    if (!healthy.has_value()) {
+        return;
+    }
+
+    habitService.logMealHabit(currentUser->getId(), *healthy);
+    std::cout << (*healthy ? "Logged a healthy meal.\n" : "Logged an unhealthy meal.\n");
+}
+
 // Shows the logged-in user's day: goal, intake, progress and points.
 void ConsoleUI::showDailyStats() {
     std::string date = util::today();
@@ -182,14 +193,16 @@ void ConsoleUI::showDailyStats() {
 
     int goalMl = currentUser->getWaterGoalMl();
     int consumedMl = habitService.consumedWaterMl(userId, date);
+    NutritionSummary meals = habitService.nutritionSummary(userId, date);
     int score = habitService.dailyScore(userId, date);
 
     int percent = goalMl > 0 ? (consumedMl * 100) / goalMl : 0;
 
     std::cout << "\n--- My day (" << date << ") ---\n";
-    std::cout << "Hello, " << currentUser->getName() << "!\n";
-    std::cout << "Water goal:   " << goalMl << " ml\n";
-    std::cout << "Consumed:     " << consumedMl << " ml (" << percent << "%)\n";
+    std::cout << "Water intake: " << consumedMl << " / " << goalMl
+              << " ml (" << percent << "%)\n";
+    std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
+              << meals.unhealthyMeals << " unhealthy\n";
     std::cout << "Daily points: " << score << "\n\n";
 }
 
@@ -227,7 +240,7 @@ bool ConsoleUI::loggedOutMenu() {
 bool ConsoleUI::loggedInMenu() {
     std::string option;
 
-    std::cout << "\n1. Log water\n";
+    std::cout << "\n1. Log action\n";
     std::cout << "2. View my day\n";
     std::cout << "0. Log out\n";
     std::cout << "Choose an option: ";
@@ -237,7 +250,27 @@ bool ConsoleUI::loggedInMenu() {
     }
 
     if (option == "1") {
-        logWater();
+        std::string action;
+        std::cout << "\n1. Water\n";
+        std::cout << "2. Meal\n";
+        std::cout << "3. Exercise\n";
+        std::cout << "4. Sleep\n";
+        std::cout << "0. Back\n";
+        std::cout << "Choose an action: ";
+
+        if (!(std::cin >> action)) {
+            return false;
+        }
+
+        if (action == "1") {
+            logWater();
+        } else if (action == "2") {
+            logMeal();
+        } else if (action == "3" || action == "4") {
+            std::cout << "This action is not available yet.\n";
+        } else if (action != "0") {
+            std::cout << "Invalid action. Please choose a valid option.\n";
+        }
     } else if (option == "2") {
         showDailyStats();
     } else if (option == "0") {

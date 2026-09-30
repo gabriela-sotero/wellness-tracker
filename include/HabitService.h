@@ -2,6 +2,12 @@
 
 #include "Database.h"
 
+struct NutritionSummary {
+    int healthyMeals;
+    int unhealthyMeals;
+    int points;
+};
+
 class HabitService {
     private:
         Database& database;
@@ -10,7 +16,9 @@ class HabitService {
         HabitService(Database& database);
 
         void logWaterHabit(int userId, int ml) const;
+        void logMealHabit(int userId, bool healthy) const;
 
         int dailyScore(int userId, const std::string& date) const;
         int consumedWaterMl(int userId, const std::string& date) const;
+        NutritionSummary nutritionSummary(int userId, const std::string& date) const;
 };
