@@ -67,7 +67,7 @@ Habit
 Each habit may implement its own behavior, such as:
 
 ```cpp
-virtual int calculatePoints() const = 0;
+virtual int calculateScore() const = 0;
 virtual bool isCompleted() const = 0;
 ```
 
@@ -75,7 +75,7 @@ virtual bool isCompleted() const = 0;
 
 Initial score proposal:
 
-| Habit | Points |
+| Habit | XP |
 |---|---:|
 | Water | 25 |
 | Sleep | 25 |

@@ -252,7 +252,7 @@ void ConsoleUI::logSleep() {
     std::cout << "Logged " << hours << " hours of sleep.\n";
 }
 
-// Shows the logged-in user's day: goal, intake, progress and points.
+// Shows the logged-in user's day: goal, intake, progress and XP.
 void ConsoleUI::showDailyStats() {
     std::string date = util::today();
     int userId = currentUser->getId();
@@ -269,19 +269,96 @@ void ConsoleUI::showDailyStats() {
 
     std::cout << "\n--- My day (" << date << ") ---\n";
     std::cout << "Water intake: " << consumedMl << " / " << goalMl
-              << " ml (" << percent << "%) (" << waterPoints << " points)\n";
+              << " ml (" << percent << "%) (" << waterPoints << " XP)\n";
     std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
               << meals.unhealthyMeals << " unhealthy (" << meals.points
-              << " points)\n";
+              << " XP)\n";
     std::cout << "Exercise:     " << (exercise.completed ? "Completed" : "Not completed")
-              << " (" << exercise.points << " points)\n";
+              << " (" << exercise.points << " XP)\n";
     int sleepPercent = static_cast<int>(
         (sleep.hours * 100.0) / Constants::DEFAULT_SLEEP_GOAL_HOURS
     );
     std::cout << "Sleep:        " << sleep.hours << " / "
               << Constants::DEFAULT_SLEEP_GOAL_HOURS << " hours ("
-              << sleepPercent << "%) (" << sleep.points << " points)\n";
-    std::cout << "Daily points: " << score << "\n\n";
+              << sleepPercent << "%) (" << sleep.points << " XP)\n";
+    std::cout << "Daily XP: " << score << "\n\n";
+}
+
+void ConsoleUI::showProfile() {
+    const int userId = currentUser->getId();
+    const int waterGoalMl = currentUser->getWaterGoalMl();
+    const std::string today = util::today();
+    const auto firstDate = database.firstDailyRecordDate(userId);
+
+    int waterXp = 0;
+    int nutritionXp = 0;
+    int exerciseXp = 0;
+    int sleepXp = 0;
+    std::vector<bool> waterGoalMet;
+    std::vector<bool> healthyMealsGoalMet;
+    std::vector<bool> exerciseGoalMet;
+    std::vector<bool> sleepGoalMet;
+
+    if (firstDate.has_value()) {
+        std::tm date{};
+        std::istringstream input(*firstDate);
+        input >> std::get_time(&date, "%Y-%m-%d");
+        if (!input.fail()) {
+            date.tm_hour = 12; // Noon avoids daylight-saving transitions at midnight.
+            std::mktime(&date);
+            while (true) {
+                char buffer[11];
+                std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &date);
+                const std::string currentDate(buffer);
+                if (currentDate > today) {
+                    break;
+                }
+
+                const int water = habitService.consumedWaterMl(userId, currentDate);
+                const NutritionSummary meals = habitService.nutritionSummary(userId, currentDate);
+                const ExerciseSummary exercise = habitService.exerciseSummary(userId, currentDate);
+                const SleepSummary sleep = habitService.sleepSummary(userId, currentDate);
+                waterXp += habitService.waterScore(userId, currentDate);
+                nutritionXp += meals.points;
+                exerciseXp += exercise.points;
+                sleepXp += sleep.points;
+                waterGoalMet.push_back(water >= waterGoalMl);
+                healthyMealsGoalMet.push_back(meals.healthyMeals >= 3);
+                exerciseGoalMet.push_back(exercise.completed);
+                sleepGoalMet.push_back(sleep.hours > 8.0);
+
+                date.tm_mday += 1;
+                std::mktime(&date);
+            }
+        }
+    }
+
+    const auto currentStreak = [](const std::vector<bool>& met) {
+        int streak = 0;
+        auto day = met.rbegin();
+        // Today is still in progress, so an unmet goal today does not break
+        // a streak that was active through yesterday.
+        if (day != met.rend() && !*day) {
+            ++day;
+        }
+        for (; day != met.rend() && *day; ++day) {
+            ++streak;
+        }
+        return streak;
+    };
+
+    std::cout << "\n--- Profile: " << currentUser->getName() << " ---\n";
+    std::cout << "XP by habit\n";
+    std::cout << "Water:     " << waterXp << " XP\n";
+    std::cout << "Nutrition: " << nutritionXp << " XP\n";
+    std::cout << "Exercise:  " << exerciseXp << " XP\n";
+    std::cout << "Sleep:     " << sleepXp << " XP\n";
+    std::cout << "Total:     " << waterXp + nutritionXp + exerciseXp + sleepXp << " XP\n";
+    std::cout << "\nCurrent goal streaks (days)\n";
+    std::cout << "Water goal met:      " << currentStreak(waterGoalMet) << "\n";
+    std::cout << "3 healthy meals:     " << currentStreak(healthyMealsGoalMet) << "\n";
+    std::cout << "Exercise completed:  " << currentStreak(exerciseGoalMet) << "\n";
+    std::cout << "More than 8h sleep:  " << currentStreak(sleepGoalMet) << "\n\n";
 }
 
 void ConsoleUI::showPeriodStats(
@@ -329,15 +406,15 @@ void ConsoleUI::showPeriodStats(
     const std::streamsize oldPrecision = std::cout.precision();
     std::cout << "\n--- " << period << " (" << dates.front() << " to " << dates.back() << ") ---\n";
     std::cout << "Water intake: " << consumedMl << " / " << periodGoalMl
-              << " ml (" << waterPercent << "%) (" << waterPoints << " points)\n";
+              << " ml (" << waterPercent << "%) (" << waterPoints << " XP)\n";
     std::cout << "Meals:        " << healthyMeals << " healthy, " << unhealthyMeals
-              << " unhealthy (" << nutritionPoints << " points)\n";
+              << " unhealthy (" << nutritionPoints << " XP)\n";
     std::cout << "Exercise:     " << exerciseDays << " days completed ("
-              << exercisePoints << " points)\n";
+              << exercisePoints << " XP)\n";
     std::cout << "Sleep:        " << std::fixed << std::setprecision(1) << sleepHours
               << " / " << sleepGoalHours << " hours (" << sleepPercent << "%) ("
-              << sleepPoints << " points)\n";
-    std::cout << "Total points: " << dailyPoints << "\n\n";
+              << sleepPoints << " XP)\n";
+    std::cout << "Total XP: " << dailyPoints << "\n\n";
     std::cout.unsetf(std::ios::floatfield);
     std::cout.precision(oldPrecision);
 }
@@ -405,6 +482,7 @@ bool ConsoleUI::loggedInMenu() {
 
     std::cout << "\n1. Log action\n";
     std::cout << "2. View progress\n";
+    std::cout << "3. View profile\n";
     std::cout << "0. Log out\n";
     std::cout << "Choose an option: ";
 
@@ -438,6 +516,8 @@ bool ConsoleUI::loggedInMenu() {
         }
     } else if (option == "2") {
         showHistoryMenu();
+    } else if (option == "3") {
+        showProfile();
     } else if (option == "0") {
         logOut();
     } else {

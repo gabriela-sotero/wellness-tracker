@@ -41,6 +41,9 @@ public:
 
     std::optional<User> getUserById(int id);
 
+    // Returns the first day with tracked activity for this account.
+    std::optional<std::string> firstDailyRecordDate(int userId);
+
     std::optional<User> getUserByUsername(
         const std::string& username
     );
