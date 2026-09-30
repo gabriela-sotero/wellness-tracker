@@ -4,6 +4,7 @@
 void runWaterTests();
 void runNutritionTests();
 void runExerciseTests();
+void runConsoleStatsTests();
 void runDailyRecordTests();
 void runHabitServiceTests();
 
@@ -11,6 +12,7 @@ int main() {
     runWaterTests();
     runNutritionTests();
     runExerciseTests();
+    runConsoleStatsTests();
     runDailyRecordTests();
     runHabitServiceTests();
 
