@@ -7,9 +7,9 @@ Wellness Tracker is a C++ application for tracking daily wellness habits with si
 Initial habits:
 
 - Water intake
+- Meals
 - Sleep
 - Exercise
-- Social activity
 
 The project focuses on object-oriented programming, manual data structures, persistence, and future migration to Qt.
 
@@ -33,19 +33,15 @@ If the user does not provide a weight, the system uses a default water goal of 2
 
 ### Habit Tracking
 - Log water intake
+- Log meals
 - Log sleep
 - Mark exercise as completed
-- Mark social activity as completed
 
 ### Progress
 - Daily score
 - Daily history
 - Weekly summary
 - Habit streaks
-
-### Social
-- Create or join groups
-- View weekly group ranking
 
 ## Main Entities
 
@@ -54,7 +50,7 @@ If the user does not provide a weight, the system uses a default water goal of 2
 - WaterHabit
 - SleepHabit
 - ExerciseHabit
-- SocialHabit
+- NutritionHabit
 - DailyRecord
 - Group
 
@@ -65,7 +61,7 @@ Habit
 ├── WaterHabit
 ├── SleepHabit
 ├── ExerciseHabit
-└── SocialHabit
+└── NutritionHabit
 ```
 
 Each habit may implement its own behavior, such as:
@@ -84,7 +80,7 @@ Initial score proposal:
 | Water | 25 |
 | Sleep | 25 |
 | Exercise | 25 |
-| Social | 25 |
+| Nutrition | 25 |
 | Total | 100 |
 
 ## Persistence

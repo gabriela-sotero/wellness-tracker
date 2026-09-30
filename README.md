@@ -16,9 +16,9 @@ The project is being developed for an Object-Oriented Data Structures course, wi
 The initial version includes:
 
 - Water intake
+- Meals
 - Sleep
 - Exercise
-- Social activity
 
 ## Planned Features
 
@@ -70,4 +70,3 @@ You'll need SQLite 3.
 ## Tests
 
 Run unit tests with `cmake --build build && ./build/tests`
-
