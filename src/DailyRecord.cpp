@@ -78,6 +78,10 @@ int DailyRecord::sleepScore() const {
     return sleep.calculateScore();
 }
 
+int DailyRecord::waterScore() const {
+    return water.calculateScore();
+}
+
 int DailyRecord::consumedWaterMl() const {
     return water.getConsumedMl();
 }

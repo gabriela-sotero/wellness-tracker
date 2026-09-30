@@ -221,6 +221,7 @@ void ConsoleUI::showDailyStats() {
 
     int goalMl = currentUser->getWaterGoalMl();
     int consumedMl = habitService.consumedWaterMl(userId, date);
+    int waterPoints = habitService.waterScore(userId, date);
     NutritionSummary meals = habitService.nutritionSummary(userId, date);
     ExerciseSummary exercise = habitService.exerciseSummary(userId, date);
     SleepSummary sleep = habitService.sleepSummary(userId, date);
@@ -230,10 +231,10 @@ void ConsoleUI::showDailyStats() {
 
     std::cout << "\n--- My day (" << date << ") ---\n";
     std::cout << "Water intake: " << consumedMl << " / " << goalMl
-              << " ml (" << percent << "%)\n";
+              << " ml (" << percent << "%) (" << waterPoints << " points)\n";
     std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
-              << meals.unhealthyMeals << " unhealthy\n";
-    std::cout << "Meal points:  " << meals.points << "\n";
+              << meals.unhealthyMeals << " unhealthy (" << meals.points
+              << " points)\n";
     std::cout << "Exercise:     " << (exercise.completed ? "Completed" : "Not completed")
               << " (" << exercise.points << " points)\n";
     int sleepPercent = static_cast<int>(
@@ -241,7 +242,7 @@ void ConsoleUI::showDailyStats() {
     );
     std::cout << "Sleep:        " << sleep.hours << " / "
               << Constants::DEFAULT_SLEEP_GOAL_HOURS << " hours ("
-              << sleepPercent << "%, " << sleep.points << " points)\n";
+              << sleepPercent << "%) (" << sleep.points << " points)\n";
     std::cout << "Daily points: " << score << "\n\n";
 }
 

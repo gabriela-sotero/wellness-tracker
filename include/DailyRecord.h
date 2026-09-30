@@ -30,6 +30,7 @@ class DailyRecord {
         bool exerciseCompleted() const;
         double sleptHours() const;
         int sleepScore() const;
+        int waterScore() const;
         int consumedWaterMl() const;
         int healthyMealCount() const;
         int unhealthyMealCount() const;

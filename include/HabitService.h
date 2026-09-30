@@ -32,6 +32,7 @@ class HabitService {
 
         int dailyScore(int userId, const std::string& date) const;
         int consumedWaterMl(int userId, const std::string& date) const;
+        int waterScore(int userId, const std::string& date) const;
         NutritionSummary nutritionSummary(int userId, const std::string& date) const;
         ExerciseSummary exerciseSummary(int userId, const std::string& date) const;
         SleepSummary sleepSummary(int userId, const std::string& date) const;

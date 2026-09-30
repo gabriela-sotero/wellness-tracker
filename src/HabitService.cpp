@@ -82,6 +82,17 @@ int HabitService::consumedWaterMl(int userId, const std::string& date) const {
     return 0;
 }
 
+int HabitService::waterScore(int userId, const std::string& date) const {
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl()
+        );
+        return record.waterScore();
+    }
+
+    return 0;
+}
+
 NutritionSummary HabitService::nutritionSummary(
     int userId,
     const std::string& date
