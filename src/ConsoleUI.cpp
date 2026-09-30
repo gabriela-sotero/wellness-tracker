@@ -1,10 +1,13 @@
 #include "ConsoleUI.h"
 
 #include <cmath>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "Constants.h"
 #include "DateUtils.h"
@@ -246,6 +249,83 @@ void ConsoleUI::showDailyStats() {
     std::cout << "Daily XP: " << score << "\n\n";
 }
 
+void ConsoleUI::showProfile() {
+    const int userId = currentUser->getId();
+    const int waterGoalMl = currentUser->getWaterGoalMl();
+    const std::string today = util::today();
+    const auto firstDate = database.firstDailyRecordDate(userId);
+
+    int waterXp = 0;
+    int nutritionXp = 0;
+    int exerciseXp = 0;
+    int sleepXp = 0;
+    std::vector<bool> waterGoalMet;
+    std::vector<bool> healthyMealsGoalMet;
+    std::vector<bool> exerciseGoalMet;
+    std::vector<bool> sleepGoalMet;
+
+    if (firstDate.has_value()) {
+        std::tm date{};
+        std::istringstream input(*firstDate);
+        input >> std::get_time(&date, "%Y-%m-%d");
+        if (!input.fail()) {
+            date.tm_hour = 12; // Noon avoids daylight-saving transitions at midnight.
+            std::mktime(&date);
+            while (true) {
+                char buffer[11];
+                std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &date);
+                const std::string currentDate(buffer);
+                if (currentDate > today) {
+                    break;
+                }
+
+                const int water = habitService.consumedWaterMl(userId, currentDate);
+                const NutritionSummary meals = habitService.nutritionSummary(userId, currentDate);
+                const ExerciseSummary exercise = habitService.exerciseSummary(userId, currentDate);
+                const SleepSummary sleep = habitService.sleepSummary(userId, currentDate);
+                waterXp += habitService.waterScore(userId, currentDate);
+                nutritionXp += meals.points;
+                exerciseXp += exercise.points;
+                sleepXp += sleep.points;
+                waterGoalMet.push_back(water >= waterGoalMl);
+                healthyMealsGoalMet.push_back(meals.healthyMeals >= 3);
+                exerciseGoalMet.push_back(exercise.completed);
+                sleepGoalMet.push_back(sleep.hours > 8.0);
+
+                date.tm_mday += 1;
+                std::mktime(&date);
+            }
+        }
+    }
+
+    const auto currentStreak = [](const std::vector<bool>& met) {
+        int streak = 0;
+        auto day = met.rbegin();
+        // Today is still in progress, so an unmet goal today does not break
+        // a streak that was active through yesterday.
+        if (day != met.rend() && !*day) {
+            ++day;
+        }
+        for (; day != met.rend() && *day; ++day) {
+            ++streak;
+        }
+        return streak;
+    };
+
+    std::cout << "\n--- Profile: " << currentUser->getName() << " ---\n";
+    std::cout << "XP by habit\n";
+    std::cout << "Water:     " << waterXp << " XP\n";
+    std::cout << "Nutrition: " << nutritionXp << " XP\n";
+    std::cout << "Exercise:  " << exerciseXp << " XP\n";
+    std::cout << "Sleep:     " << sleepXp << " XP\n";
+    std::cout << "Total:     " << waterXp + nutritionXp + exerciseXp + sleepXp << " XP\n";
+    std::cout << "\nCurrent goal streaks (days)\n";
+    std::cout << "Water goal met:      " << currentStreak(waterGoalMet) << "\n";
+    std::cout << "3 healthy meals:     " << currentStreak(healthyMealsGoalMet) << "\n";
+    std::cout << "Exercise completed:  " << currentStreak(exerciseGoalMet) << "\n";
+    std::cout << "More than 8h sleep:  " << currentStreak(sleepGoalMet) << "\n\n";
+}
+
 void ConsoleUI::logOut() {
     currentUser = std::nullopt;
     std::cout << "Logged out.\n";
@@ -282,6 +362,7 @@ bool ConsoleUI::loggedInMenu() {
 
     std::cout << "\n1. Log action\n";
     std::cout << "2. View my day\n";
+    std::cout << "3. View profile\n";
     std::cout << "0. Log out\n";
     std::cout << "Choose an option: ";
 
@@ -315,6 +396,8 @@ bool ConsoleUI::loggedInMenu() {
         }
     } else if (option == "2") {
         showDailyStats();
+    } else if (option == "3") {
+        showProfile();
     } else if (option == "0") {
         logOut();
     } else {

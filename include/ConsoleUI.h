@@ -25,6 +25,7 @@ private:
     void logExercise();
     void logSleep();
     void showDailyStats();
+    void showProfile();
     void logOut();
 
     // Menus. Return false when the app should exit.

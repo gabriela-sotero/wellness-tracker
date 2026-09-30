@@ -292,6 +292,28 @@ std::optional<User> Database::getUserById(int id) {
     return User(userId, username, name, waterGoalMl);
 }
 
+std::optional<std::string> Database::firstDailyRecordDate(int userId) {
+    const char* sql = "SELECT MIN(date) FROM daily_records WHERE user_id = ?;";
+    sqlite3_stmt* statement = nullptr;
+    if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
+        std::cerr << "Failed to prepare first activity date query: "
+                  << sqlite3_errmsg(db) << '\n';
+        return std::nullopt;
+    }
+
+    sqlite3_bind_int(statement, 1, userId);
+    const int result = sqlite3_step(statement);
+    std::optional<std::string> date;
+    if (result == SQLITE_ROW && sqlite3_column_type(statement, 0) != SQLITE_NULL) {
+        const auto* value = sqlite3_column_text(statement, 0);
+        if (value != nullptr) {
+            date = reinterpret_cast<const char*>(value);
+        }
+    }
+    sqlite3_finalize(statement);
+    return date;
+}
+
 std::optional<User> Database::getUserByUsername(
     const std::string& username
 ) {
