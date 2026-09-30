@@ -18,7 +18,7 @@ public:
 
     void createTables();
 
-    // Reads the user's record, restoring water and meal totals, or returns a
+    // Reads the user's record, restoring water, meal and exercise data, or returns a
     // fresh zeroed record with the given water goal when no record exists.
     // Read-only: the row is only created on saveDailyRecord.
     DailyRecord loadOrCreateDailyRecord(
@@ -28,7 +28,7 @@ public:
     );
 
     // Persists the record: ensures the daily_records row exists and upserts
-    // water and meal totals into their daily log tables.
+    // water, meal and exercise data into their daily log tables.
     void saveDailyRecord(const DailyRecord& record);
 
     int insertUser(

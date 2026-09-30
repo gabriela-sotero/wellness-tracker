@@ -36,6 +36,19 @@ void HabitService::logMealHabit(int userId, bool healthy) const {
     }
 }
 
+void HabitService::logExerciseHabit(int userId) const {
+    std::string date = util::today();
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl()
+        );
+        record.logExercise();
+        database.saveDailyRecord(record);
+    } else {
+        std::cerr << "logExerciseHabit: user " << userId << " not found.\n";
+    }
+}
+
 int HabitService::dailyScore(int userId, const std::string& date) const {
     if (auto user = database.getUserById(userId)) {
         DailyRecord record = database.loadOrCreateDailyRecord(
@@ -72,4 +85,18 @@ NutritionSummary HabitService::nutritionSummary(
     }
 
     return {0, 0, 0};
+}
+
+ExerciseSummary HabitService::exerciseSummary(
+    int userId,
+    const std::string& date
+) const {
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl()
+        );
+        return {record.exerciseCompleted(), record.exerciseScore()};
+    }
+
+    return {false, 0};
 }

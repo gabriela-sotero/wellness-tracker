@@ -62,6 +62,12 @@ void Database::createTables() {
             unhealthy_meals INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY(daily_record_id) REFERENCES daily_records(id)
         );
+
+        CREATE TABLE IF NOT EXISTS exercise_logs (
+            daily_record_id INTEGER PRIMARY KEY,
+            completed INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY(daily_record_id) REFERENCES daily_records(id)
+        );
     )";
 
     char* errorMessage = nullptr;
@@ -417,15 +423,17 @@ DailyRecord Database::loadOrCreateDailyRecord(
     int waterGoalMl
 ) {
     // Always start from a fresh, zeroed record with the user's goal.
-    // If the day already has data, restore its water and meal counts below.
+    // If the day already has data, restore all habit values below.
     DailyRecord record(userId, date, waterGoalMl);
 
     const char* sql =
         "SELECT COALESCE(wl.consumed_ml, 0), "
-        "COALESCE(nl.healthy_meals, 0), COALESCE(nl.unhealthy_meals, 0) "
+        "COALESCE(nl.healthy_meals, 0), COALESCE(nl.unhealthy_meals, 0), "
+        "COALESCE(el.completed, 0) "
         "FROM daily_records dr "
         "LEFT JOIN water_logs wl ON wl.daily_record_id = dr.id "
         "LEFT JOIN nutrition_logs nl ON nl.daily_record_id = dr.id "
+        "LEFT JOIN exercise_logs el ON el.daily_record_id = dr.id "
         "WHERE dr.user_id = ? AND dr.date = ?;";
 
     sqlite3_stmt* statement = nullptr;
@@ -463,6 +471,7 @@ DailyRecord Database::loadOrCreateDailyRecord(
             sqlite3_column_int(statement, 1),
             sqlite3_column_int(statement, 2)
         );
+        record.seedExercise(sqlite3_column_int(statement, 3) != 0);
     }
 
     sqlite3_finalize(statement);
@@ -612,6 +621,32 @@ void Database::saveDailyRecord(const DailyRecord& record) {
     sqlite3_finalize(nutritionStatement);
     if (result != SQLITE_DONE) {
         std::cerr << "Failed to upsert nutrition log: "
+                  << sqlite3_errmsg(db) << '\n';
+        return;
+    }
+
+    const char* upsertExercise =
+        "INSERT INTO exercise_logs (daily_record_id, completed) "
+        "VALUES (?, ?) "
+        "ON CONFLICT(daily_record_id) DO UPDATE SET "
+        "completed = excluded.completed;";
+
+    sqlite3_stmt* exerciseStatement = nullptr;
+    result = sqlite3_prepare_v2(
+        db, upsertExercise, -1, &exerciseStatement, nullptr
+    );
+    if (result != SQLITE_OK) {
+        std::cerr << "Failed to prepare exercise log upsert: "
+                  << sqlite3_errmsg(db) << '\n';
+        return;
+    }
+
+    sqlite3_bind_int(exerciseStatement, 1, dailyRecordId);
+    sqlite3_bind_int(exerciseStatement, 2, record.exerciseCompleted() ? 1 : 0);
+    result = sqlite3_step(exerciseStatement);
+    sqlite3_finalize(exerciseStatement);
+    if (result != SQLITE_DONE) {
+        std::cerr << "Failed to upsert exercise log: "
                   << sqlite3_errmsg(db) << '\n';
     }
 }

@@ -186,6 +186,12 @@ void ConsoleUI::logMeal() {
     std::cout << (*healthy ? "Logged a healthy meal.\n" : "Logged an unhealthy meal.\n");
 }
 
+// Marks today's exercise as completed.
+void ConsoleUI::logExercise() {
+    habitService.logExerciseHabit(currentUser->getId());
+    std::cout << "Exercise marked as completed.\n";
+}
+
 // Shows the logged-in user's day: goal, intake, progress and points.
 void ConsoleUI::showDailyStats() {
     std::string date = util::today();
@@ -194,6 +200,7 @@ void ConsoleUI::showDailyStats() {
     int goalMl = currentUser->getWaterGoalMl();
     int consumedMl = habitService.consumedWaterMl(userId, date);
     NutritionSummary meals = habitService.nutritionSummary(userId, date);
+    ExerciseSummary exercise = habitService.exerciseSummary(userId, date);
     int score = habitService.dailyScore(userId, date);
 
     int percent = goalMl > 0 ? (consumedMl * 100) / goalMl : 0;
@@ -203,6 +210,9 @@ void ConsoleUI::showDailyStats() {
               << " ml (" << percent << "%)\n";
     std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
               << meals.unhealthyMeals << " unhealthy\n";
+    std::cout << "Meal points:  " << meals.points << "\n";
+    std::cout << "Exercise:     " << (exercise.completed ? "completed" : "not completed")
+              << " (" << exercise.points << " points)\n";
     std::cout << "Daily points: " << score << "\n\n";
 }
 
@@ -266,7 +276,9 @@ bool ConsoleUI::loggedInMenu() {
             logWater();
         } else if (action == "2") {
             logMeal();
-        } else if (action == "3" || action == "4") {
+        } else if (action == "3") {
+            logExercise();
+        } else if (action == "4") {
             std::cout << "This action is not available yet.\n";
         } else if (action != "0") {
             std::cout << "Invalid action. Please choose a valid option.\n";

@@ -22,6 +22,7 @@ private:
     // Logged-in actions.
     void logWater();
     void logMeal();
+    void logExercise();
     void showDailyStats();
     void logOut();
 
