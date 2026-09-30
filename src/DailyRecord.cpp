@@ -5,9 +5,10 @@ DailyRecord::DailyRecord(
     std::string date,
     int dailyGoalMl
 ):
-    userId(userId),
+    water(dailyGoalMl),
+    nutrition(3),
     date(date),
-    water(dailyGoalMl){
+    userId(userId) {
 }
 
 void DailyRecord::logWater(int ml) {
@@ -15,12 +16,37 @@ void DailyRecord::logWater(int ml) {
     return;
 }
 
+void DailyRecord::logMeal(bool healthy) {
+    if (healthy) {
+        nutrition.logHealthyMeal();
+    } else {
+        nutrition.logUnhealthyMeal();
+    }
+}
+
+void DailyRecord::seedMeals(int healthyMeals, int unhealthyMeals) {
+    for (int i = 0; i < healthyMeals; ++i) {
+        nutrition.logHealthyMeal();
+    }
+    for (int i = 0; i < unhealthyMeals; ++i) {
+        nutrition.logUnhealthyMeal();
+    }
+}
+
 int DailyRecord::dailyScore() const{
-    return water.calculateScore();
+    return water.calculateScore() + nutrition.calculateScore();
 }
 
 int DailyRecord::consumedWaterMl() const {
     return water.getConsumedMl();
+}
+
+int DailyRecord::healthyMealCount() const {
+    return nutrition.healthyMealCount();
+}
+
+int DailyRecord::unhealthyMealCount() const {
+    return nutrition.unhealthyMealCount();
 }
 
 int DailyRecord::getUserId() const {

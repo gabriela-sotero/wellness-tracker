@@ -175,6 +175,17 @@ void ConsoleUI::logWater() {
     std::cout << "Logged " << ml << " ml of water.\n";
 }
 
+// Logs one meal and records whether it was healthy.
+void ConsoleUI::logMeal() {
+    auto healthy = askYesNo("Was this a healthy meal?");
+    if (!healthy.has_value()) {
+        return;
+    }
+
+    habitService.logMealHabit(currentUser->getId(), *healthy);
+    std::cout << (*healthy ? "Logged a healthy meal.\n" : "Logged an unhealthy meal.\n");
+}
+
 // Shows the logged-in user's day: goal, intake, progress and points.
 void ConsoleUI::showDailyStats() {
     std::string date = util::today();
@@ -251,7 +262,9 @@ bool ConsoleUI::loggedInMenu() {
 
         if (action == "1") {
             logWater();
-        } else if (action == "2" || action == "3" || action == "4") {
+        } else if (action == "2") {
+            logMeal();
+        } else if (action == "3" || action == "4") {
             std::cout << "This action is not available yet.\n";
         } else if (action != "0") {
             std::cout << "Invalid action. Please choose a valid option.\n";
