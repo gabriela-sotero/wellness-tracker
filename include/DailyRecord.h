@@ -3,6 +3,7 @@
 #include <string>
 #include "ExerciseHabit.h"
 #include "NutritionHabit.h"
+#include "SleepHabit.h"
 #include "WaterHabit.h"
 
 class DailyRecord {
@@ -10,6 +11,7 @@ class DailyRecord {
         WaterHabit water;
         NutritionHabit nutrition;
         ExerciseHabit exercise;
+        SleepHabit sleep;
         std::string date;
         int userId;
     public:
@@ -20,10 +22,15 @@ class DailyRecord {
         void seedMeals(int healthyMeals, int unhealthyMeals);
         void logExercise();
         void seedExercise(bool completed);
+        void logSleep(double hours);
+        void seedSleep(double hours);
         int dailyScore() const;
         int nutritionScore() const;
         int exerciseScore() const;
         bool exerciseCompleted() const;
+        double sleptHours() const;
+        int sleepScore() const;
+        int waterScore() const;
         int consumedWaterMl() const;
         int healthyMealCount() const;
         int unhealthyMealCount() const;

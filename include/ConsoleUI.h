@@ -23,6 +23,7 @@ private:
     void logWater();
     void logMeal();
     void logExercise();
+    void logSleep();
     void showDailyStats();
     void logOut();
 

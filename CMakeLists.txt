@@ -15,6 +15,7 @@ add_library(wellness_core
     src/ConsoleUI.cpp
     src/WaterHabit.cpp
     src/ExerciseHabit.cpp
+    src/SleepHabit.cpp
     src/DailyRecord.cpp
     src/NutritionHabit.cpp
     src/HabitService.cpp
@@ -33,6 +34,7 @@ add_executable(tests
     tests/test_water.cpp
     tests/test_nutrition.cpp
     tests/test_exercise.cpp
+    tests/test_console_stats.cpp
     tests/test_daily_record.cpp
     tests/test_habit_service.cpp
 )

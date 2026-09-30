@@ -49,6 +49,19 @@ void HabitService::logExerciseHabit(int userId) const {
     }
 }
 
+void HabitService::logSleepHabit(int userId, double hours) const {
+    std::string date = util::today();
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl()
+        );
+        record.logSleep(hours);
+        database.saveDailyRecord(record);
+    } else {
+        std::cerr << "logSleepHabit: user " << userId << " not found.\n";
+    }
+}
+
 int HabitService::dailyScore(int userId, const std::string& date) const {
     if (auto user = database.getUserById(userId)) {
         DailyRecord record = database.loadOrCreateDailyRecord(
@@ -64,6 +77,17 @@ int HabitService::consumedWaterMl(int userId, const std::string& date) const {
         DailyRecord record = database.loadOrCreateDailyRecord(
             userId, date, user->getWaterGoalMl());
         return record.consumedWaterMl();
+    }
+
+    return 0;
+}
+
+int HabitService::waterScore(int userId, const std::string& date) const {
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl()
+        );
+        return record.waterScore();
     }
 
     return 0;
@@ -99,4 +123,18 @@ ExerciseSummary HabitService::exerciseSummary(
     }
 
     return {false, 0};
+}
+
+SleepSummary HabitService::sleepSummary(
+    int userId,
+    const std::string& date
+) const {
+    if (auto user = database.getUserById(userId)) {
+        DailyRecord record = database.loadOrCreateDailyRecord(
+            userId, date, user->getWaterGoalMl()
+        );
+        return {record.sleptHours(), record.sleepScore()};
+    }
+
+    return {0.0, 0};
 }
