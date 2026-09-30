@@ -24,7 +24,7 @@ static void test_daily_view_shows_each_habit_and_points_on_one_line() {
         "1\n2\ny\n"    // Log one healthy meal
         "1\n3\n"        // Complete exercise
         "1\n4\n4\n"    // Log 4 hours sleep
-        "2\n"          // View my day
+        "2\n1\n"       // View progress, then daily
         "0\n"          // Log out
     );
     std::ostringstream output;
