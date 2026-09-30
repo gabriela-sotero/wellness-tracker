@@ -30,6 +30,19 @@ target_link_libraries(wellness_core PUBLIC ${SQLite3_LIBRARIES})
 add_executable(wellness_tracker src/main.cpp)
 target_link_libraries(wellness_tracker PRIVATE wellness_core)
 
+# Optional Qt Widgets login application. The CLI and core still build without Qt.
+find_package(Qt6 COMPONENTS Widgets QUIET)
+if(Qt6_FOUND)
+    add_executable(wellness_gui
+        src/gui/main.cpp
+        src/gui/LoginWindow.cpp
+    )
+    target_include_directories(wellness_gui PRIVATE src/gui)
+    target_link_libraries(wellness_gui PRIVATE wellness_core Qt6::Widgets)
+else()
+    message(STATUS "Qt6 Widgets not found; skipping the wellness_gui target.")
+endif()
+
 # Unit tests
 enable_testing()
 add_executable(tests

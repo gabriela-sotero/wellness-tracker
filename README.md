@@ -67,6 +67,7 @@ The project is currently in its initial structure and core modeling phase.
 - A C++20 compiler (GCC 13+ or Clang 16+)
 - CMake 3.16 or newer
 - SQLite 3 **development** package (the headers, not just the runtime library)
+- Qt 6 Widgets (optional; needed only for the graphical login app)
 
 On Debian / Ubuntu / Pop!_OS:
 
@@ -83,7 +84,7 @@ sudo dnf install -y gcc-c++ cmake sqlite-devel
 On macOS (Homebrew):
 
 ```bash
-brew install cmake sqlite
+brew install cmake sqlite qt
 ```
 
 ## Build
@@ -104,6 +105,12 @@ cmake --build build
 
 ```bash
 ./build/wellness_tracker
+```
+
+When Qt 6 is installed, CMake also builds the graphical login app:
+
+```bash
+./build/wellness_gui
 ```
 
 ## Tests
