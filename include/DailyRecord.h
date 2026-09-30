@@ -17,6 +17,7 @@ class DailyRecord {
         void logMeal(bool healthy);
         void seedMeals(int healthyMeals, int unhealthyMeals);
         int dailyScore() const;
+        int nutritionScore() const;
         int consumedWaterMl() const;
         int healthyMealCount() const;
         int unhealthyMealCount() const;

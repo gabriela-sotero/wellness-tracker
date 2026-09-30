@@ -37,6 +37,10 @@ int DailyRecord::dailyScore() const{
     return water.calculateScore() + nutrition.calculateScore();
 }
 
+int DailyRecord::nutritionScore() const {
+    return nutrition.calculateScore();
+}
+
 int DailyRecord::consumedWaterMl() const {
     return water.getConsumedMl();
 }

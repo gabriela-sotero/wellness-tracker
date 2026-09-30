@@ -6,6 +6,6 @@ namespace Constants{
     constexpr int WATER_MAX_SCORE = 500;
     constexpr int SLEEP_MAX_SCORE = 500;
     constexpr int EXERCISE_MAX_SCORE = 300;
-    constexpr int NUTRITION_MAX_SCORE = 150; // 3 per day
+    constexpr int NUTRITION_MAX_SCORE = 300; // 3 per day
     constexpr int NUTRITION_UNHEALTHY_PENALTY = 50;
 }

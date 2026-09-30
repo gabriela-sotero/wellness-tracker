@@ -193,14 +193,16 @@ void ConsoleUI::showDailyStats() {
 
     int goalMl = currentUser->getWaterGoalMl();
     int consumedMl = habitService.consumedWaterMl(userId, date);
+    NutritionSummary meals = habitService.nutritionSummary(userId, date);
     int score = habitService.dailyScore(userId, date);
 
     int percent = goalMl > 0 ? (consumedMl * 100) / goalMl : 0;
 
     std::cout << "\n--- My day (" << date << ") ---\n";
-    std::cout << "Hello, " << currentUser->getName() << "!\n";
-    std::cout << "Water goal:   " << goalMl << " ml\n";
-    std::cout << "Consumed:     " << consumedMl << " ml (" << percent << "%)\n";
+    std::cout << "Water intake: " << consumedMl << " / " << goalMl
+              << " ml (" << percent << "%)\n";
+    std::cout << "Meals:        " << meals.healthyMeals << " healthy, "
+              << meals.unhealthyMeals << " unhealthy\n";
     std::cout << "Daily points: " << score << "\n\n";
 }
 
