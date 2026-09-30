@@ -1,13 +1,51 @@
 #include "ConsoleUI.h"
 
 #include <cmath>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "Constants.h"
 #include "DateUtils.h"
+
+namespace {
+std::string formatDate(const std::tm& date) {
+    char buffer[11];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &date);
+    return buffer;
+}
+
+std::vector<std::string> datesForPeriod(int daysBack, bool calendarMonth, bool calendarYear) {
+    std::time_t now = std::time(nullptr);
+    std::tm today = *std::localtime(&now);
+    std::tm first = today;
+    if (calendarYear) {
+        first.tm_mon = 0;
+        first.tm_mday = 1;
+    } else if (calendarMonth) {
+        first.tm_mday = 1;
+    } else {
+        first.tm_mday -= daysBack;
+    }
+    first.tm_hour = 12;
+    first.tm_min = 0;
+    first.tm_sec = 0;
+    std::mktime(&first);
+
+    std::vector<std::string> dates;
+    std::tm current = first;
+    while (formatDate(current) <= formatDate(today)) {
+        dates.push_back(formatDate(current));
+        current.tm_mday += 1;
+        std::mktime(&current);
+    }
+    return dates;
+}
+}
 
 ConsoleUI::ConsoleUI(Database& database)
     : database(database),
@@ -246,9 +284,94 @@ void ConsoleUI::showDailyStats() {
     std::cout << "Daily points: " << score << "\n\n";
 }
 
+void ConsoleUI::showPeriodStats(
+    const std::string& period,
+    int daysBack,
+    bool calendarMonth,
+    bool calendarYear
+) {
+    const std::vector<std::string> dates = datesForPeriod(daysBack, calendarMonth, calendarYear);
+    const int userId = currentUser->getId();
+    const int goalMl = currentUser->getWaterGoalMl();
+    int consumedMl = 0;
+    int waterPoints = 0;
+    int healthyMeals = 0;
+    int unhealthyMeals = 0;
+    int nutritionPoints = 0;
+    int exerciseDays = 0;
+    int exercisePoints = 0;
+    double sleepHours = 0.0;
+    int sleepPoints = 0;
+    int dailyPoints = 0;
+
+    for (const std::string& date : dates) {
+        consumedMl += habitService.consumedWaterMl(userId, date);
+        waterPoints += habitService.waterScore(userId, date);
+        const NutritionSummary meals = habitService.nutritionSummary(userId, date);
+        healthyMeals += meals.healthyMeals;
+        unhealthyMeals += meals.unhealthyMeals;
+        nutritionPoints += meals.points;
+        const ExerciseSummary exercise = habitService.exerciseSummary(userId, date);
+        exerciseDays += exercise.completed ? 1 : 0;
+        exercisePoints += exercise.points;
+        const SleepSummary sleep = habitService.sleepSummary(userId, date);
+        sleepHours += sleep.hours;
+        sleepPoints += sleep.points;
+        dailyPoints += habitService.dailyScore(userId, date);
+    }
+
+    const int periodGoalMl = goalMl * static_cast<int>(dates.size());
+    const int waterPercent = periodGoalMl > 0 ? consumedMl * 100 / periodGoalMl : 0;
+    const double sleepGoalHours = Constants::DEFAULT_SLEEP_GOAL_HOURS * dates.size();
+    const int sleepPercent = sleepGoalHours > 0
+        ? static_cast<int>(sleepHours * 100.0 / sleepGoalHours)
+        : 0;
+    const std::streamsize oldPrecision = std::cout.precision();
+    std::cout << "\n--- " << period << " (" << dates.front() << " to " << dates.back() << ") ---\n";
+    std::cout << "Water intake: " << consumedMl << " / " << periodGoalMl
+              << " ml (" << waterPercent << "%) (" << waterPoints << " points)\n";
+    std::cout << "Meals:        " << healthyMeals << " healthy, " << unhealthyMeals
+              << " unhealthy (" << nutritionPoints << " points)\n";
+    std::cout << "Exercise:     " << exerciseDays << " days completed ("
+              << exercisePoints << " points)\n";
+    std::cout << "Sleep:        " << std::fixed << std::setprecision(1) << sleepHours
+              << " / " << sleepGoalHours << " hours (" << sleepPercent << "%) ("
+              << sleepPoints << " points)\n";
+    std::cout << "Total points: " << dailyPoints << "\n\n";
+    std::cout.unsetf(std::ios::floatfield);
+    std::cout.precision(oldPrecision);
+}
+
 void ConsoleUI::logOut() {
     currentUser = std::nullopt;
     std::cout << "Logged out.\n";
+}
+
+void ConsoleUI::showHistoryMenu() {
+    std::string option;
+    std::cout << "\n--- View progress ---\n";
+    std::cout << "1. Daily\n";
+    std::cout << "2. Weekly\n";
+    std::cout << "3. Monthly\n";
+    std::cout << "4. Yearly\n";
+    std::cout << "0. Back\n";
+    std::cout << "Choose a period: ";
+
+    if (!(std::cin >> option)) {
+        return;
+    }
+
+    if (option == "1") {
+        showDailyStats();
+    } else if (option == "2") {
+        showPeriodStats("Weekly", 6, false, false);
+    } else if (option == "3") {
+        showPeriodStats("Monthly", 0, true, false);
+    } else if (option == "4") {
+        showPeriodStats("Yearly", 0, false, true);
+    } else if (option != "0") {
+        std::cout << "Invalid option. Please choose a valid option.\n";
+    }
 }
 
 bool ConsoleUI::loggedOutMenu() {
@@ -281,7 +404,7 @@ bool ConsoleUI::loggedInMenu() {
     std::string option;
 
     std::cout << "\n1. Log action\n";
-    std::cout << "2. View my day\n";
+    std::cout << "2. View progress\n";
     std::cout << "0. Log out\n";
     std::cout << "Choose an option: ";
 
@@ -314,7 +437,7 @@ bool ConsoleUI::loggedInMenu() {
             std::cout << "Invalid action. Please choose a valid option.\n";
         }
     } else if (option == "2") {
-        showDailyStats();
+        showHistoryMenu();
     } else if (option == "0") {
         logOut();
     } else {
