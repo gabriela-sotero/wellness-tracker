@@ -151,6 +151,54 @@ static void test_profile_summary_without_history() {
     assert(profile.waterStreak == 0);
 }
 
+// A badge is unlocked by the highest tier the streak has passed.
+static void test_badge_days_for_streak() {
+    assert(badgeDaysFor(0) == 0);
+    assert(badgeDaysFor(2) == 0);     // Below the first tier.
+    assert(badgeDaysFor(3) == 3);
+    assert(badgeDaysFor(14) == 7);    // Still on the tier below 15.
+    assert(badgeDaysFor(15) == 15);
+    assert(badgeDaysFor(364) == 330);
+    assert(badgeDaysFor(365) == 365);
+    assert(badgeDaysFor(500) == 365); // Nothing above the last tier.
+}
+
+// A broken streak lowers the current count but never the best one.
+static void test_best_streak_survives_a_break() {
+    Database db(":memory:");
+    db.createTables();
+
+    int userId = db.insertUser("hugo", "Hugo", "pw", std::nullopt, 2000);
+    std::vector<std::string> dates = util::lastDays(5);
+    saveDay(db, userId, dates[0], 2000, 3, 9.0);
+    saveDay(db, userId, dates[1], 2000, 3, 9.0);
+    saveDay(db, userId, dates[2], 2000, 3, 9.0);
+    saveDay(db, userId, dates[3], 0, 3, 9.0);     // Goal missed, streak broken.
+    saveDay(db, userId, dates[4], 2000, 3, 9.0);
+
+    ProfileSummary profile = HabitService(db).profileSummary(userId);
+
+    assert(profile.waterStreak == 1);
+    assert(profile.waterBestStreak == 3);
+    assert(badgeDaysFor(profile.waterBestStreak) == 3);
+    // The meal goal was met every day, so both counts agree there.
+    assert(profile.healthyMealsStreak == 5);
+    assert(profile.healthyMealsBestStreak == 5);
+}
+
+// A new account records the day it was created.
+static void test_account_creation_date() {
+    Database db(":memory:");
+    db.createTables();
+
+    int userId = db.insertUser("iris", "Iris", "pw");
+    auto createdAt = db.accountCreatedAt(userId);
+
+    assert(createdAt.has_value());
+    assert(*createdAt == util::today());
+    assert(!db.accountCreatedAt(9999).has_value());
+}
+
 void runHabitServiceTests() {
     test_log_water_accumulates_and_scores();
     test_log_meals_accumulates_and_scores();
@@ -159,4 +207,7 @@ void runHabitServiceTests() {
     test_period_summary_without_days();
     test_profile_summary_totals_xp_and_streaks();
     test_profile_summary_without_history();
+    test_badge_days_for_streak();
+    test_best_streak_survives_a_break();
+    test_account_creation_date();
 }

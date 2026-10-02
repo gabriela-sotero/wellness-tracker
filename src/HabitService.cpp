@@ -141,6 +141,33 @@ SleepSummary HabitService::sleepSummary(
     return {0.0, 0};
 }
 
+// The longest run of met days anywhere in the history.
+static int longestStreak(const std::vector<bool>& met) {
+    int longest = 0;
+    int run = 0;
+
+    for (bool day : met) {
+        run = day ? run + 1 : 0;
+        if (run > longest) {
+            longest = run;
+        }
+    }
+
+    return longest;
+}
+
+int badgeDaysFor(int streak) {
+    int days = 0;
+
+    for (int tier = 0; tier < Constants::BADGE_TIER_COUNT; ++tier) {
+        if (streak >= Constants::BADGE_TIERS[tier]) {
+            days = Constants::BADGE_TIERS[tier];
+        }
+    }
+
+    return days;
+}
+
 // Counts the days met in a row ending at the last entry. Today is still in
 // progress, so an unmet goal today does not break a streak held yesterday.
 static int currentStreak(const std::vector<bool>& met) {
@@ -230,6 +257,10 @@ ProfileSummary HabitService::profileSummary(int userId) const {
     summary.healthyMealsStreak = currentStreak(healthyMealsGoalMet);
     summary.exerciseStreak = currentStreak(exerciseGoalMet);
     summary.sleepStreak = currentStreak(sleepGoalMet);
+    summary.waterBestStreak = longestStreak(waterGoalMet);
+    summary.healthyMealsBestStreak = longestStreak(healthyMealsGoalMet);
+    summary.exerciseBestStreak = longestStreak(exerciseGoalMet);
+    summary.sleepBestStreak = longestStreak(sleepGoalMet);
 
     return summary;
 }

@@ -40,7 +40,8 @@ struct PeriodSummary {
     int totalPoints;
 };
 
-// Lifetime XP and the goal streaks running up to today.
+// Lifetime XP, the goal streaks running up to today, and the longest ones
+// ever reached, which is what the badges are unlocked by.
 struct ProfileSummary {
     int waterXp;
     int nutritionXp;
@@ -51,7 +52,14 @@ struct ProfileSummary {
     int healthyMealsStreak;
     int exerciseStreak;
     int sleepStreak;
+    int waterBestStreak;
+    int healthyMealsBestStreak;
+    int exerciseBestStreak;
+    int sleepBestStreak;
 };
+
+// The highest badge tier a streak has reached, or 0 when none is unlocked yet.
+int badgeDaysFor(int streak);
 
 class HabitService {
     private:
