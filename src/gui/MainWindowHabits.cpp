@@ -66,7 +66,7 @@ QWidget* MainWindow::createHabitsPage() {
 
 // Reports what was logged in green, and input problems in red.
 static void report(QLabel* feedback, const QString& message, bool logged) {
-    feedback->setStyleSheet(logged ? "color: #16856b;" : "");
+    feedback->setStyleSheet(logged ? "color: #007c68;" : "");
     feedback->setText(message);
 }
 

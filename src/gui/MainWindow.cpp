@@ -53,19 +53,19 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
             font-size: 14px;
         }
         QLineEdit:focus {
-            border: 2px solid #16856b;
+            border: 2px solid #007c68;
         }
         QPushButton {
             min-height: 38px;
             border: none;
             border-radius: 9px;
-            background-color: #16856b;
+            background-color: #007c68;
             color: white;
             font-size: 14px;
             font-weight: 600;
         }
         QPushButton:hover {
-            background-color: #116d58;
+            background-color: #006454;
         }
         QProgressBar {
             min-height: 24px;
@@ -77,7 +77,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
             text-align: center;
         }
         QProgressBar::chunk {
-            background-color: #a8d5c9;
+            background-color: #a0cec7;
             border-radius: 8px;
         }
     )");

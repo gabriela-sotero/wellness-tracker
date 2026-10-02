@@ -161,7 +161,7 @@ void MainWindow::attemptSignup() {
     signupFeedback->clear();
 
     loginUsername->setText(username);
-    loginFeedback->setStyleSheet("color: #16856b;");
+    loginFeedback->setStyleSheet("color: #007c68;");
     loginFeedback->setText("Account created. You can now sign in.");
     showPage(LoginPage);
 }
