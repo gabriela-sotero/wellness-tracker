@@ -1,12 +1,48 @@
 #include "MainWindow.h"
 
 #include <QLabel>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "Constants.h"
 #include "DateUtils.h"
 #include "PageLayout.h"
+
+// Adds a habit row, starting empty until a period is chosen.
+static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
+    QWidget* page = layout->parentWidget();
+
+    ProgressRow row;
+    row.label = new QLabel(name, page);
+    row.bar = new QProgressBar(page);
+    layout->addWidget(row.label);
+    layout->addWidget(row.bar);
+
+    return row;
+}
+
+// Fills a row. The bar is clamped because QProgressBar ignores a value past
+// its maximum, but the text keeps reporting what the user actually did.
+static void fillProgressRow(
+    const ProgressRow& row,
+    const QString& name,
+    int points,
+    int value,
+    int maximum,
+    const QString& text
+) {
+    row.label->setText(name + " - " + QString::number(points) + " XP");
+    row.bar->setMaximum(maximum > 0 ? maximum : 1);
+    row.bar->setValue(value < maximum ? value : maximum);
+    row.bar->setFormat(text);
+}
+
+// Percent of a goal, reported past 100% when the goal is beaten.
+static int percentOf(double value, double goal) {
+    return goal > 0 ? static_cast<int>(value * 100.0 / goal) : 0;
+}
 
 QWidget* MainWindow::createProgressPage() {
     auto* page = new QWidget;
@@ -21,10 +57,17 @@ QWidget* MainWindow::createProgressPage() {
     layout->addWidget(monthly);
     layout->addWidget(yearly);
 
-    progressBody = new QLabel(page);
-    progressBody->setObjectName("body");
-    progressBody->setWordWrap(true);
-    layout->addWidget(progressBody);
+    progressHeading = new QLabel(page);
+    progressHeading->setWordWrap(true);
+    layout->addWidget(progressHeading);
+
+    waterRow = addProgressRow(layout, "Water");
+    mealsRow = addProgressRow(layout, "Meals");
+    exerciseRow = addProgressRow(layout, "Exercise");
+    sleepRow = addProgressRow(layout, "Sleep");
+
+    progressTotal = new QLabel(page);
+    layout->addWidget(progressTotal);
     layout->addStretch();
 
     auto* back = new QPushButton("Back", page);
@@ -49,6 +92,68 @@ QWidget* MainWindow::createProgressPage() {
     return page;
 }
 
+void MainWindow::showPeriod(const QString& period, const std::vector<std::string>& dates) {
+    const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
+
+    if (summary.days == 0) {
+        progressHeading->setText("No days to show.");
+        showPage(ProgressPage);
+        return;
+    }
+
+    // One day reads as a date, a longer period as a range.
+    progressHeading->setText(
+        summary.days == 1
+            ? period + " (" + QString::fromStdString(summary.firstDate) + ")"
+            : period + " (" + QString::fromStdString(summary.firstDate) + " to "
+                  + QString::fromStdString(summary.lastDate) + ")"
+    );
+
+    const int waterPercent = percentOf(summary.consumedWaterMl, summary.waterGoalMl);
+    fillProgressRow(
+        waterRow, "Water", summary.waterPoints,
+        summary.consumedWaterMl, summary.waterGoalMl,
+        QString::number(summary.consumedWaterMl) + " / "
+            + QString::number(summary.waterGoalMl) + " ml ("
+            + QString::number(waterPercent) + "%)"
+    );
+
+    const int mealsGoal = Constants::HEALTHY_MEALS_GOAL * summary.days;
+    const int mealsPercent = percentOf(summary.healthyMeals, mealsGoal);
+    fillProgressRow(
+        mealsRow, "Meals", summary.nutritionPoints,
+        summary.healthyMeals, mealsGoal,
+        QString::number(summary.healthyMeals) + " / " + QString::number(mealsGoal)
+            + " healthy, " + QString::number(summary.unhealthyMeals)
+            + " unhealthy (" + QString::number(mealsPercent) + "%)"
+    );
+
+    const int exercisePercent = percentOf(summary.exerciseDays, summary.days);
+    fillProgressRow(
+        exerciseRow, "Exercise", summary.exercisePoints,
+        summary.exerciseDays, summary.days,
+        summary.days == 1
+            ? QString(summary.exerciseDays > 0 ? "Completed" : "Not completed")
+            : QString::number(summary.exerciseDays) + " / "
+                  + QString::number(summary.days) + " days ("
+                  + QString::number(exercisePercent) + "%)"
+    );
+
+    // Tenths of an hour keep the bar accurate, since its value is an integer.
+    const int sleepPercent = percentOf(summary.sleepHours, summary.sleepGoalHours);
+    fillProgressRow(
+        sleepRow, "Sleep", summary.sleepPoints,
+        static_cast<int>(summary.sleepHours * 10),
+        static_cast<int>(summary.sleepGoalHours * 10),
+        QString::number(summary.sleepHours, 'f', 1) + " / "
+            + QString::number(summary.sleepGoalHours, 'f', 1) + " hours ("
+            + QString::number(sleepPercent) + "%)"
+    );
+
+    progressTotal->setText("Total XP: " + QString::number(summary.totalPoints));
+    showPage(ProgressPage);
+}
+
 QWidget* MainWindow::createProfilePage() {
     auto* page = new QWidget;
     auto* layout = startPage(page, "Profile");
@@ -67,52 +172,6 @@ QWidget* MainWindow::createProfilePage() {
     });
 
     return page;
-}
-
-void MainWindow::showPeriod(const QString& period, const std::vector<std::string>& dates) {
-    const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
-
-    if (summary.days == 0) {
-        progressBody->setText("No days to show.");
-        showPage(ProgressPage);
-        return;
-    }
-
-    const int waterPercent = summary.waterGoalMl > 0
-        ? summary.consumedWaterMl * 100 / summary.waterGoalMl
-        : 0;
-    const int sleepPercent = summary.sleepGoalHours > 0
-        ? static_cast<int>(summary.sleepHours * 100.0 / summary.sleepGoalHours)
-        : 0;
-
-    // One day reads as a date, a longer period as a range.
-    const QString heading = summary.days == 1
-        ? period + " (" + QString::fromStdString(summary.firstDate) + ")"
-        : period + " (" + QString::fromStdString(summary.firstDate) + " to "
-              + QString::fromStdString(summary.lastDate) + ")";
-
-    const QString exercise = summary.days == 1
-        ? QString(summary.exerciseDays > 0 ? "Completed" : "Not completed")
-        : QString::number(summary.exerciseDays) + " days completed";
-
-    progressBody->setText(
-        heading + "\n\n"
-        + "Water:     " + QString::number(summary.consumedWaterMl) + " / "
-            + QString::number(summary.waterGoalMl) + " ml ("
-            + QString::number(waterPercent) + "%) - "
-            + QString::number(summary.waterPoints) + " XP\n"
-        + "Meals:     " + QString::number(summary.healthyMeals) + " healthy, "
-            + QString::number(summary.unhealthyMeals) + " unhealthy - "
-            + QString::number(summary.nutritionPoints) + " XP\n"
-        + "Exercise:  " + exercise + " - "
-            + QString::number(summary.exercisePoints) + " XP\n"
-        + "Sleep:     " + QString::number(summary.sleepHours, 'f', 1) + " / "
-            + QString::number(summary.sleepGoalHours, 'f', 1) + " hours ("
-            + QString::number(sleepPercent) + "%) - "
-            + QString::number(summary.sleepPoints) + " XP\n\n"
-        + "Total XP:  " + QString::number(summary.totalPoints)
-    );
-    showPage(ProgressPage);
 }
 
 void MainWindow::showProfile() {

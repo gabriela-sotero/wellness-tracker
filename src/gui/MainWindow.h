@@ -12,7 +12,15 @@
 
 class QLabel;
 class QLineEdit;
+class QProgressBar;
 class QStackedWidget;
+class QVBoxLayout;
+
+// One habit on the progress page: the name and XP above, the bar below.
+struct ProgressRow {
+    QLabel* label = nullptr;
+    QProgressBar* bar = nullptr;
+};
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -52,8 +60,14 @@ private:
     QLabel* habitFeedback = nullptr;
 
     QLabel* homeGreeting = nullptr;
-    QLabel* progressBody = nullptr;
     QLabel* profileBody = nullptr;
+
+    QLabel* progressHeading = nullptr;
+    ProgressRow waterRow;
+    ProgressRow mealsRow;
+    ProgressRow exerciseRow;
+    ProgressRow sleepRow;
+    QLabel* progressTotal = nullptr;
 
     QWidget* createStartPage();
     QWidget* createLoginPage();
