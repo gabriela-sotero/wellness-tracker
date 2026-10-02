@@ -38,7 +38,10 @@ if(BUILD_GUI)
     find_package(Qt6 REQUIRED COMPONENTS Widgets)
     add_executable(wellness_gui
         src/gui/main.cpp
-        src/gui/LoginWindow.cpp
+        src/gui/MainWindow.cpp
+        src/gui/MainWindowAuth.cpp
+        src/gui/MainWindowHabits.cpp
+        src/gui/MainWindowProgress.cpp
     )
     # AUTOMOC lets the GUI widgets declare Q_OBJECT and their own signals.
     set_target_properties(wellness_gui PROPERTIES AUTOMOC ON)
