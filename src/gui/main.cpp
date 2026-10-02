@@ -1,7 +1,7 @@
 #include <QApplication>
 
 #include "Database.h"
-#include "LoginWindow.h"
+#include "MainWindow.h"
 
 int main(int argc, char* argv[]) {
     QApplication application(argc, argv);
@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     Database database("data/wellness.db");
     database.createTables();
 
-    LoginWindow window(database);
+    MainWindow window(database);
     window.show();
 
     return application.exec();

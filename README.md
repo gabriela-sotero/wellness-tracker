@@ -67,7 +67,7 @@ The project is currently in its initial structure and core modeling phase.
 - A C++20 compiler (GCC 13+ or Clang 16+)
 - CMake 3.16 or newer
 - SQLite 3 **development** package (the headers, not just the runtime library)
-- Qt 6 Widgets (optional; needed only for the graphical app)
+- Qt 6 Widgets (required by default; pass `-DBUILD_GUI=OFF` to build only the core, CLI and tests)
 
 On Debian / Ubuntu / Pop!_OS:
 
@@ -136,6 +136,16 @@ cmake --build build --target wellness_gui
 
 The first screen offers **Log in** and **Create an account**. The GUI stores accounts in the same `data/wellness.db` database as the console app.
 
+Run it from the repository root: both the database and the badge artwork in `assets/badges/` are read relative to the working directory.
+
+### Badge artwork
+
+The profile screen shows one streak badge per habit, loaded from `assets/badges/`. Qt reads SVG through the image plugin that ships with Qt base, so no extra module is linked. To change a colour, a tier or an icon, edit `tools/generate_badges.py` and run it:
+
+```bash
+python3 tools/generate_badges.py
+```
+
 ## Tests
 
 ```bash
@@ -152,5 +162,5 @@ ctest --test-dir build --output-on-failure
 
 - `Error: .../build is not a directory` — you skipped the configure step. Run `cmake -S . -B build` first.
 - `Could NOT find SQLite3 (missing: SQLite3_INCLUDE_DIR SQLite3_LIBRARY)` — the SQLite 3 headers are missing. Install `libsqlite3-dev` (see Requirements) and configure again.
-- `Skipping the wellness_gui target` — Qt 6 Widgets was not found when CMake configured the project. Install Qt 6 Widgets, then rerun `cmake -S . -B build`.
+- `Could NOT find Qt6 (missing: Qt6_DIR)` — Qt 6 Widgets is missing. Install it (see Requirements) and configure again, or skip the graphical app with `cmake -S . -B build -DBUILD_GUI=OFF`.
 - To start from scratch, delete the directory and reconfigure: `rm -rf build && cmake -S . -B build`.

@@ -1,4 +1,5 @@
 #include "Database.h"
+#include "DateUtils.h"
 
 #include <functional>
 #include <iostream>
@@ -39,7 +40,8 @@ void Database::createTables() {
             name TEXT NOT NULL,
             password_hash TEXT NOT NULL,
             weight_kg REAL,
-            water_goal_ml INTEGER NOT NULL DEFAULT 2000
+            water_goal_ml INTEGER NOT NULL DEFAULT 2000,
+            created_at TEXT
         );
 
         CREATE TABLE IF NOT EXISTS daily_records (
@@ -105,8 +107,9 @@ int Database::insertUser(
     int waterGoalMl
 ) {
     const char* sql =
-        "INSERT INTO users (username, name, password_hash, weight_kg, water_goal_ml) "
-        "VALUES (?, ?, ?, ?, ?);";
+        "INSERT INTO users "
+        "(username, name, password_hash, weight_kg, water_goal_ml, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?);";
 
     sqlite3_stmt* statement = nullptr;
 
@@ -202,6 +205,24 @@ int Database::insertUser(
         return -1;
     }
 
+    std::string createdAt = util::today();
+
+    result = sqlite3_bind_text(
+        statement,
+        6,
+        createdAt.c_str(),
+        -1,
+        SQLITE_TRANSIENT
+    );
+
+    if (result != SQLITE_OK) {
+        std::cerr << "Failed to bind creation date: "
+                  << sqlite3_errmsg(db) << '\n';
+
+        sqlite3_finalize(statement);
+        return -1;
+    }
+
     result = sqlite3_step(statement);
 
     if (result != SQLITE_DONE) {
@@ -290,6 +311,28 @@ std::optional<User> Database::getUserById(int id) {
     }
 
     return User(userId, username, name, waterGoalMl);
+}
+
+std::optional<std::string> Database::accountCreatedAt(int userId) {
+    const char* sql = "SELECT created_at FROM users WHERE id = ?;";
+    sqlite3_stmt* statement = nullptr;
+    if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
+        std::cerr << "Failed to prepare account creation date query: "
+                  << sqlite3_errmsg(db) << '\n';
+        return std::nullopt;
+    }
+
+    sqlite3_bind_int(statement, 1, userId);
+    const int result = sqlite3_step(statement);
+    std::optional<std::string> date;
+    if (result == SQLITE_ROW && sqlite3_column_type(statement, 0) != SQLITE_NULL) {
+        const auto* value = sqlite3_column_text(statement, 0);
+        if (value != nullptr) {
+            date = reinterpret_cast<const char*>(value);
+        }
+    }
+    sqlite3_finalize(statement);
+    return date;
 }
 
 std::optional<std::string> Database::firstDailyRecordDate(int userId) {

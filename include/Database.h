@@ -44,6 +44,10 @@ public:
     // Returns the first day with tracked activity for this account.
     std::optional<std::string> firstDailyRecordDate(int userId);
 
+    // Returns the day the account was created, absent for accounts made
+    // before the column existed.
+    std::optional<std::string> accountCreatedAt(int userId);
+
     std::optional<User> getUserByUsername(
         const std::string& username
     );

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+#include "DateUtils.h"
+
 ConsoleUI::ConsoleUI(Database& database)
     : database(database),
       habitService(database),
@@ -31,11 +33,11 @@ void ConsoleUI::showHistoryMenu() {
     if (option == "1") {
         showDailyStats();
     } else if (option == "2") {
-        showPeriodStats("Weekly", 6, false, false);
+        showPeriodStats("Weekly", util::lastDays(7));
     } else if (option == "3") {
-        showPeriodStats("Monthly", 0, true, false);
+        showPeriodStats("Monthly", util::monthToDate());
     } else if (option == "4") {
-        showPeriodStats("Yearly", 0, false, true);
+        showPeriodStats("Yearly", util::yearToDate());
     } else if (option != "0") {
         std::cout << "Invalid option. Please choose a valid option.\n";
     }
