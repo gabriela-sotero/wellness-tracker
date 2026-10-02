@@ -30,17 +30,20 @@ target_link_libraries(wellness_core PUBLIC ${SQLite3_LIBRARIES})
 add_executable(wellness_tracker src/main.cpp)
 target_link_libraries(wellness_tracker PRIVATE wellness_core)
 
-# Optional Qt Widgets login application. The CLI and core still build without Qt.
-find_package(Qt6 COMPONENTS Widgets QUIET)
-if(Qt6_FOUND)
+# Qt Widgets application. Built by default, so a missing Qt fails at configure
+# time instead of silently producing no GUI. Configure with -DBUILD_GUI=OFF to
+# build only the core, the CLI and the tests.
+option(BUILD_GUI "Build the Qt Widgets application" ON)
+if(BUILD_GUI)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets)
     add_executable(wellness_gui
         src/gui/main.cpp
         src/gui/LoginWindow.cpp
     )
+    # AUTOMOC lets the GUI widgets declare Q_OBJECT and their own signals.
+    set_target_properties(wellness_gui PROPERTIES AUTOMOC ON)
     target_include_directories(wellness_gui PRIVATE src/gui)
     target_link_libraries(wellness_gui PRIVATE wellness_core Qt6::Widgets)
-else()
-    message(STATUS "Qt6 Widgets not found; skipping the wellness_gui target.")
 endif()
 
 # Unit tests
