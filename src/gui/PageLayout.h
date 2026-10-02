@@ -8,6 +8,8 @@
 // Starts a page with its title and returns the layout, so each page only has
 // to add the widgets that come below the title.
 inline QVBoxLayout* startPage(QWidget* page, const QString& title) {
+    page->setObjectName("page");
+
     auto* layout = new QVBoxLayout(page);
     layout->setContentsMargins(30, 30, 30, 30);
     layout->setSpacing(10);

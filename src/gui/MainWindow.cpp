@@ -17,13 +17,70 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
       currentUser(std::nullopt),
       pages(new QStackedWidget(this)) {
     setWindowTitle("Wellness Tracker");
-    resize(520, 620);
-    setStyleSheet(
-        "QLabel#title { font-size: 20px; font-weight: bold; }"
-        "QLabel#feedback { color: #b54747; }"
-        "QLabel#body { font-family: monospace; }"
-        "QLineEdit, QPushButton { min-height: 28px; }"
-    );
+    resize(560, 720);
+    setStyleSheet(R"(
+        QMainWindow, QWidget#page {
+            background-color: #f4f7f5;
+        }
+        QLabel {
+            color: #183b35;
+            font-size: 13px;
+        }
+        QLabel#title {
+            color: #183b35;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        QLabel#subtitle {
+            color: #66817a;
+            font-size: 14px;
+        }
+        QLabel#body {
+            font-family: monospace;
+            font-size: 13px;
+        }
+        QLabel#feedback {
+            color: #b54747;
+            font-size: 13px;
+        }
+        QLineEdit {
+            min-height: 34px;
+            padding: 0 12px;
+            border: 1px solid #d5e2dd;
+            border-radius: 9px;
+            background-color: white;
+            color: #183b35;
+            font-size: 14px;
+        }
+        QLineEdit:focus {
+            border: 2px solid #16856b;
+        }
+        QPushButton {
+            min-height: 38px;
+            border: none;
+            border-radius: 9px;
+            background-color: #16856b;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        QPushButton:hover {
+            background-color: #116d58;
+        }
+        QProgressBar {
+            min-height: 24px;
+            border: 1px solid #d5e2dd;
+            border-radius: 9px;
+            background-color: white;
+            color: #183b35;
+            font-size: 13px;
+            text-align: center;
+        }
+        QProgressBar::chunk {
+            background-color: #a8d5c9;
+            border-radius: 8px;
+        }
+    )");
 
     // Added in the order of the Page enum.
     pages->addWidget(createStartPage());
@@ -46,7 +103,10 @@ QWidget* MainWindow::createStartPage() {
     auto* page = new QWidget;
     auto* layout = startPage(page, "Wellness Tracker");
 
-    layout->addWidget(new QLabel("Build healthy habits, one day at a time.", page));
+    auto* subtitle = new QLabel("Build healthy habits, one day at a time.", page);
+    subtitle->setObjectName("subtitle");
+    subtitle->setWordWrap(true);
+    layout->addWidget(subtitle);
     layout->addStretch();
 
     auto* login = new QPushButton("Log in", page);
