@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "Database.h"
 #include "HabitService.h"
@@ -28,9 +29,7 @@ private:
     void showProfile();
     void showPeriodStats(
         const std::string& period,
-        int daysBack,
-        bool calendarMonth,
-        bool calendarYear
+        const std::vector<std::string>& dates
     );
     void showHistoryMenu();
     void logOut();
