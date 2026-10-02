@@ -80,10 +80,10 @@ QWidget* MainWindow::createProgressPage() {
         showPeriod("Weekly", util::lastDays(7));
     });
     connect(monthly, &QPushButton::clicked, this, [this] {
-        showPeriod("Monthly", util::monthToDate());
+        showPeriod("Monthly", util::monthToDate(), true);
     });
     connect(yearly, &QPushButton::clicked, this, [this] {
-        showPeriod("Yearly", util::yearToDate());
+        showPeriod("Yearly", util::yearToDate(), true);
     });
     connect(back, &QPushButton::clicked, this, [this] {
         showPage(HomePage);
@@ -92,7 +92,11 @@ QWidget* MainWindow::createProgressPage() {
     return page;
 }
 
-void MainWindow::showPeriod(const QString& period, const std::vector<std::string>& dates) {
+void MainWindow::showPeriod(
+    const QString& period,
+    const std::vector<std::string>& dates,
+    bool toDate
+) {
     const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
 
     if (summary.days == 0) {
@@ -101,13 +105,20 @@ void MainWindow::showPeriod(const QString& period, const std::vector<std::string
         return;
     }
 
-    // One day reads as a date, a longer period as a range.
-    progressHeading->setText(
-        summary.days == 1
-            ? period + " (" + QString::fromStdString(summary.firstDate) + ")"
-            : period + " (" + QString::fromStdString(summary.firstDate) + " to "
-                  + QString::fromStdString(summary.lastDate) + ")"
-    );
+    // One day reads as a date. A longer period states how many days it covers,
+    // so the denominator in each bar is not read as the whole month or year.
+    if (summary.days == 1) {
+        progressHeading->setText(
+            period + " (" + QString::fromStdString(summary.firstDate) + ")"
+        );
+    } else {
+        progressHeading->setText(
+            period + " - " + QString::number(summary.days)
+                + (toDate ? " days so far\n(" : " days\n(")
+                + QString::fromStdString(summary.firstDate) + " to "
+                + QString::fromStdString(summary.lastDate) + ")"
+        );
+    }
 
     const int waterPercent = percentOf(summary.consumedWaterMl, summary.waterGoalMl);
     fillProgressRow(

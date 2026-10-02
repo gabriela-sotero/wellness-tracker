@@ -88,7 +88,12 @@ private:
     void logMeal(bool healthy);
     void logExercise();
     void logSleep();
-    void showPeriod(const QString& period, const std::vector<std::string>& dates);
+    // toDate marks a period that is still filling up, like the current month.
+    void showPeriod(
+        const QString& period,
+        const std::vector<std::string>& dates,
+        bool toDate = false
+    );
     void showProfile();
     void logOut();
 
