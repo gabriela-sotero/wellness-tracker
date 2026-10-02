@@ -60,7 +60,13 @@ private:
     QLabel* habitFeedback = nullptr;
 
     QLabel* homeGreeting = nullptr;
-    QLabel* profileBody = nullptr;
+
+    QLabel* profileName = nullptr;
+    QLabel* profileMemberSince = nullptr;
+    std::vector<QLabel*> badgeImages;
+    std::vector<QLabel*> badgeCaptions;
+    std::vector<QLabel*> xpValues;
+    std::vector<QLabel*> streakValues;
 
     QLabel* progressHeading = nullptr;
     ProgressRow waterRow;

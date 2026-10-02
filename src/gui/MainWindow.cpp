@@ -17,7 +17,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
       currentUser(std::nullopt),
       pages(new QStackedWidget(this)) {
     setWindowTitle("Wellness Tracker");
-    resize(560, 720);
+    resize(560, 790);
     setStyleSheet(R"(
         QMainWindow, QWidget#page {
             background-color: #f4f7f5;
@@ -38,6 +38,32 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
         QLabel#body {
             font-family: monospace;
             font-size: 13px;
+        }
+        QWidget#card {
+            background-color: #FFFFFF;
+            border: 1px solid #d5e2dd;
+            border-radius: 9px;
+        }
+        QLabel#cardTitle {
+            font-weight: 600;
+            color: #183b35;
+        }
+        QLabel#muted {
+            color: #66817a;
+        }
+        QLabel#value {
+            font-weight: 600;
+            color: #183b35;
+        }
+        QLabel#total {
+            font-size: 15px;
+            font-weight: 700;
+            color: #007c68;
+        }
+        QLabel#name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #183b35;
         }
         QLabel#feedback {
             color: #b54747;

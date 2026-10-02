@@ -1,6 +1,9 @@
 #include "MainWindow.h"
 
+#include <QHBoxLayout>
+#include <QImageReader>
 #include <QLabel>
+#include <QPixmap>
 #include <QProgressBar>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -165,16 +168,70 @@ void MainWindow::showPeriod(
     showPage(ProgressPage);
 }
 
+// Badge artwork ships as SVG under assets/badges, read relative to the working
+// directory like the database is. Qt rasterises the file at the size asked for.
+static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
+    const QString file = badgeDays > 0
+        ? habit + "-" + QString("%1").arg(badgeDays, 3, 10, QChar('0')) + ".svg"
+        : QString("locked.svg");
+
+    QImageReader reader("assets/badges/" + file);
+    reader.setScaledSize(QSize(width, width * 86 / 70));
+    return QPixmap::fromImage(reader.read());
+}
+
 QWidget* MainWindow::createProfilePage() {
     auto* page = new QWidget;
     auto* layout = startPage(page, "Profile");
 
-    profileBody = new QLabel(page);
-    profileBody->setObjectName("body");
-    profileBody->setWordWrap(true);
-    layout->addWidget(profileBody);
-    layout->addStretch();
+    auto* account = addCard(layout, QString());
+    profileName = new QLabel(page);
+    profileName->setObjectName("name");
+    profileMemberSince = new QLabel(page);
+    profileMemberSince->setObjectName("muted");
+    account->addWidget(profileName);
+    account->addWidget(profileMemberSince);
 
+    auto* badges = addCard(layout, "Badges");
+    auto* badgeRow = new QHBoxLayout;
+    badgeRow->setContentsMargins(0, 4, 0, 0);
+    for (const QString& habit : {"Water", "Meals", "Exercise"}) {
+        auto* column = new QVBoxLayout;
+        column->setSpacing(4);
+
+        auto* image = new QLabel(page);
+        image->setAlignment(Qt::AlignCenter);
+        auto* name = new QLabel(habit, page);
+        name->setObjectName("value");
+        name->setAlignment(Qt::AlignCenter);
+        auto* caption = new QLabel(page);
+        caption->setObjectName("muted");
+        caption->setAlignment(Qt::AlignCenter);
+
+        column->addWidget(image);
+        column->addWidget(name);
+        column->addWidget(caption);
+        badgeRow->addLayout(column);
+
+        badgeImages.push_back(image);
+        badgeCaptions.push_back(caption);
+    }
+    badges->addLayout(badgeRow);
+
+    auto* xp = addCard(layout, "XP by habit");
+    for (const QString& habit : {"Water", "Nutrition", "Exercise", "Sleep"}) {
+        xpValues.push_back(addCardRow(xp, habit));
+    }
+    xpValues.push_back(addCardRow(xp, "Total"));
+    xpValues.back()->setObjectName("total");
+
+    auto* streaks = addCard(layout, "Current streaks");
+    for (const QString& goal : {"Water goal met", "3 healthy meals",
+                                "Exercise completed", "More than 8h sleep"}) {
+        streakValues.push_back(addCardRow(streaks, goal));
+    }
+
+    layout->addStretch();
     auto* back = new QPushButton("Back", page);
     layout->addWidget(back);
 
@@ -186,21 +243,43 @@ QWidget* MainWindow::createProfilePage() {
 }
 
 void MainWindow::showProfile() {
-    const ProfileSummary profile = habitService.profileSummary(currentUser->getId());
+    const int userId = currentUser->getId();
+    const ProfileSummary profile = habitService.profileSummary(userId);
+    const auto createdAt = database.accountCreatedAt(userId);
 
-    profileBody->setText(
-        QString::fromStdString(currentUser->getName()) + "\n\n"
-        + "XP by habit\n"
-        + "Water:     " + QString::number(profile.waterXp) + " XP\n"
-        + "Nutrition: " + QString::number(profile.nutritionXp) + " XP\n"
-        + "Exercise:  " + QString::number(profile.exerciseXp) + " XP\n"
-        + "Sleep:     " + QString::number(profile.sleepXp) + " XP\n"
-        + "Total:     " + QString::number(profile.totalXp) + " XP\n\n"
-        + "Current goal streaks (days)\n"
-        + "Water goal met:     " + QString::number(profile.waterStreak) + "\n"
-        + "3 healthy meals:    " + QString::number(profile.healthyMealsStreak) + "\n"
-        + "Exercise completed: " + QString::number(profile.exerciseStreak) + "\n"
-        + "More than 8h sleep: " + QString::number(profile.sleepStreak)
+    profileName->setText(QString::fromStdString(currentUser->getName()));
+    profileMemberSince->setText(
+        createdAt.has_value()
+            ? "Member since " + QString::fromStdString(*createdAt)
+            : QString("Created before the app recorded a date")
     );
+
+    const QString habits[] = {"water", "meals", "exercise"};
+    const int best[] = {
+        profile.waterBestStreak,
+        profile.healthyMealsBestStreak,
+        profile.exerciseBestStreak
+    };
+    for (int habit = 0; habit < 3; ++habit) {
+        const int badgeDays = badgeDaysFor(best[habit]);
+        badgeImages[habit]->setPixmap(badgeArtwork(habits[habit], badgeDays, 80));
+        badgeCaptions[habit]->setText(
+            badgeDays > 0
+                ? QString("best %1 days").arg(best[habit])
+                : QString("no badge yet")
+        );
+    }
+
+    xpValues[0]->setText(QString::number(profile.waterXp) + " XP");
+    xpValues[1]->setText(QString::number(profile.nutritionXp) + " XP");
+    xpValues[2]->setText(QString::number(profile.exerciseXp) + " XP");
+    xpValues[3]->setText(QString::number(profile.sleepXp) + " XP");
+    xpValues[4]->setText(QString::number(profile.totalXp) + " XP");
+
+    streakValues[0]->setText(QString::number(profile.waterStreak) + " days");
+    streakValues[1]->setText(QString::number(profile.healthyMealsStreak) + " days");
+    streakValues[2]->setText(QString::number(profile.exerciseStreak) + " days");
+    streakValues[3]->setText(QString::number(profile.sleepStreak) + " days");
+
     showPage(ProfilePage);
 }

@@ -136,6 +136,16 @@ cmake --build build --target wellness_gui
 
 The first screen offers **Log in** and **Create an account**. The GUI stores accounts in the same `data/wellness.db` database as the console app.
 
+Run it from the repository root: both the database and the badge artwork in `assets/badges/` are read relative to the working directory.
+
+### Badge artwork
+
+The profile screen shows one streak badge per habit, loaded from `assets/badges/`. Qt reads SVG through the image plugin that ships with Qt base, so no extra module is linked. To change a colour, a tier or an icon, edit `tools/generate_badges.py` and run it:
+
+```bash
+python3 tools/generate_badges.py
+```
+
 ## Tests
 
 ```bash

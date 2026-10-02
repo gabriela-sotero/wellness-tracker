@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QVBoxLayout>
@@ -48,4 +49,46 @@ inline QLabel* addFeedback(QVBoxLayout* layout) {
     feedback->setWordWrap(true);
     layout->addWidget(feedback);
     return feedback;
+}
+
+// A white panel that groups one section of a page. Returns the layout to fill
+// with the section's content.
+inline QVBoxLayout* addCard(QVBoxLayout* layout, const QString& title) {
+    auto* card = new QWidget(layout->parentWidget());
+    card->setObjectName("card");
+    // Without this a plain QWidget ignores the stylesheet background.
+    card->setAttribute(Qt::WA_StyledBackground, true);
+
+    auto* inner = new QVBoxLayout(card);
+    inner->setContentsMargins(16, 13, 16, 13);
+    inner->setSpacing(5);
+
+    if (!title.isEmpty()) {
+        auto* label = new QLabel(title, card);
+        label->setObjectName("cardTitle");
+        inner->addWidget(label);
+    }
+
+    layout->addWidget(card);
+    return inner;
+}
+
+// A name on the left and its value on the right. Returns the value label, which
+// the page fills in when it has data.
+inline QLabel* addCardRow(QVBoxLayout* card, const QString& name) {
+    QWidget* parent = card->parentWidget();
+
+    auto* label = new QLabel(name, parent);
+    label->setObjectName("muted");
+    auto* value = new QLabel(parent);
+    value->setObjectName("value");
+
+    auto* row = new QHBoxLayout;
+    row->setContentsMargins(0, 0, 0, 0);
+    row->addWidget(label);
+    row->addStretch();
+    row->addWidget(value);
+    card->addLayout(row);
+
+    return value;
 }
