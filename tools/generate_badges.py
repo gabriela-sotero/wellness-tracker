@@ -68,7 +68,7 @@ def badge_svg(habit, days, rank):
         f"{shape}"
         f"{icon_group(habit, ink)}"
         f'<rect x="6" y="58" width="58" height="23" rx="6" fill="{ink}"/>'
-        f'<text x="35" y="74.5" text-anchor="middle" font-family="sans-serif" '
+        f'<text x="35" y="74.5" text-anchor="middle" font-family="Arial" '
         f'font-size="{font_size}" font-weight="bold" fill="#FFFFFF">{days}</text>'
         "</svg>"
     )
@@ -86,7 +86,7 @@ def locked_svg():
         '<path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
         "</g>"
         '<rect x="6" y="58" width="58" height="23" rx="6" fill="#D5E2DD"/>'
-        '<text x="35" y="74.5" text-anchor="middle" font-family="sans-serif" '
+        '<text x="35" y="74.5" text-anchor="middle" font-family="Arial" '
         'font-size="11" font-weight="bold" fill="#8A9B95">LOCKED</text>'
         "</svg>"
     )
