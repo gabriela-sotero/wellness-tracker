@@ -32,6 +32,7 @@ private:
         const std::vector<std::string>& dates
     );
     void showHistoryMenu();
+    void deleteAccount();
     void logOut();
 
     // Menus. Return false when the app should exit.
