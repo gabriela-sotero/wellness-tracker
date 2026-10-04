@@ -2,7 +2,10 @@
 
 #include <QHBoxLayout>
 #include <QImageReader>
+#include <QInputDialog>
 #include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
 #include <QPixmap>
 #include <QProgressBar>
 #include <QPushButton>
@@ -12,6 +15,43 @@
 #include "Constants.h"
 #include "DateUtils.h"
 #include "PageLayout.h"
+
+namespace {
+const char* accountDialogStyle = R"(
+    QDialog, QMessageBox, QInputDialog {
+        background-color: #ffffff;
+        color: #183b35;
+    }
+    QLabel { color: #183b35; background-color: transparent; }
+    QLineEdit {
+        background-color: #ffffff;
+        color: #183b35;
+        border: 1px solid #d5e2dd;
+        border-radius: 6px;
+        padding: 6px;
+    }
+    QPushButton {
+        background-color: #007c68;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 14px;
+        min-width: 70px;
+    }
+    QPushButton:hover { background-color: #006454; }
+)";
+
+void showAccountMessage(
+    QWidget* parent,
+    QMessageBox::Icon icon,
+    const QString& title,
+    const QString& message
+) {
+    QMessageBox dialog(icon, title, message, QMessageBox::Ok, parent);
+    dialog.setStyleSheet(accountDialogStyle);
+    dialog.exec();
+}
+}
 
 // Adds a habit row, starting empty until a period is chosen.
 static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
@@ -91,7 +131,6 @@ QWidget* MainWindow::createProgressPage() {
     connect(back, &QPushButton::clicked, this, [this] {
         showPage(HomePage);
     });
-
     return page;
 }
 
@@ -233,10 +272,58 @@ QWidget* MainWindow::createProfilePage() {
 
     layout->addStretch();
     auto* back = new QPushButton("Back", page);
+    auto* deleteAccount = new QPushButton("Delete account", page);
+    deleteAccount->setStyleSheet("color: #a32121;");
     layout->addWidget(back);
+    layout->addWidget(deleteAccount);
 
     connect(back, &QPushButton::clicked, this, [this] {
         showPage(HomePage);
+    });
+    connect(deleteAccount, &QPushButton::clicked, this, [this] {
+        if (!currentUser.has_value()) {
+            return;
+        }
+
+        QMessageBox confirmation(
+            QMessageBox::Warning,
+            "Delete account",
+            "Permanently delete your account and all habit data? This cannot be undone.",
+            QMessageBox::Yes | QMessageBox::No,
+            this
+        );
+        confirmation.setDefaultButton(QMessageBox::No);
+        confirmation.setStyleSheet(accountDialogStyle);
+        if (confirmation.exec() != QMessageBox::Yes) {
+            return;
+        }
+
+        QInputDialog passwordDialog(this);
+        passwordDialog.setWindowTitle("Confirm account deletion");
+        passwordDialog.setLabelText("Enter your current password:");
+        passwordDialog.setTextEchoMode(QLineEdit::Password);
+        passwordDialog.setStyleSheet(accountDialogStyle);
+        if (passwordDialog.exec() != QDialog::Accepted) {
+            return;
+        }
+        const QString password = passwordDialog.textValue();
+
+        if (!database.authenticate(
+                currentUser->getUsername(), password.toStdString()).has_value()) {
+            showAccountMessage(this, QMessageBox::Critical, "Delete account",
+                               "Incorrect password. Account was not deleted.");
+            return;
+        }
+
+        if (!database.deleteUser(currentUser->getId())) {
+            showAccountMessage(this, QMessageBox::Critical, "Delete account",
+                               "Could not delete the account. Please try again.");
+            return;
+        }
+
+        logOut();
+        showAccountMessage(this, QMessageBox::Information, "Delete account",
+                           "Your account and associated data were deleted.");
     });
 
     return page;

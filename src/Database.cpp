@@ -488,6 +488,47 @@ std::optional<User> Database::authenticate(
     return getUserByUsername(username);
 }
 
+bool Database::deleteUser(int userId) {
+    if (userId <= 0 || sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr) != SQLITE_OK) {
+        return false;
+    }
+
+    const char* statements[] = {
+        "DELETE FROM water_logs WHERE daily_record_id IN (SELECT id FROM daily_records WHERE user_id = ?);",
+        "DELETE FROM nutrition_logs WHERE daily_record_id IN (SELECT id FROM daily_records WHERE user_id = ?);",
+        "DELETE FROM exercise_logs WHERE daily_record_id IN (SELECT id FROM daily_records WHERE user_id = ?);",
+        "DELETE FROM sleep_logs WHERE daily_record_id IN (SELECT id FROM daily_records WHERE user_id = ?);",
+        "DELETE FROM daily_records WHERE user_id = ?;",
+        "DELETE FROM users WHERE id = ?;"
+    };
+
+    bool success = true;
+    for (const char* sql : statements) {
+        sqlite3_stmt* statement = nullptr;
+        if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
+            success = false;
+            break;
+        }
+        sqlite3_bind_int(statement, 1, userId);
+        success = sqlite3_step(statement) == SQLITE_DONE;
+        sqlite3_finalize(statement);
+        if (!success) {
+            break;
+        }
+        if (sql == statements[5] && sqlite3_changes(db) != 1) {
+            success = false;
+            break;
+        }
+    }
+
+    const char* finish = success ? "COMMIT;" : "ROLLBACK;";
+    if (sqlite3_exec(db, finish, nullptr, nullptr, nullptr) != SQLITE_OK) {
+        sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+        return false;
+    }
+    return success;
+}
+
 DailyRecord Database::loadOrCreateDailyRecord(
     int userId,
     const std::string& date,

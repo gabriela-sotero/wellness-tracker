@@ -123,6 +123,32 @@ void ConsoleUI::signUpUser() {
     std::cout << "User created successfully.\n";
 }
 
+void ConsoleUI::deleteAccount() {
+    const auto confirmed = askYesNo(
+        "Permanently delete your account and all its habit data?"
+    );
+    if (!confirmed.has_value() || !*confirmed) {
+        return;
+    }
+
+    std::string password;
+    std::cout << "Confirm your password: ";
+    if (!(std::cin >> password)) {
+        return;
+    }
+    if (!database.authenticate(currentUser->getUsername(), password).has_value()) {
+        std::cout << "Incorrect password. Account was not deleted.\n";
+        return;
+    }
+
+    if (!database.deleteUser(currentUser->getId())) {
+        std::cout << "Could not delete the account. Please try again.\n";
+        return;
+    }
+    currentUser = std::nullopt;
+    std::cout << "Account and associated data deleted.\n";
+}
+
 // Authenticates a user and starts a session on success.
 void ConsoleUI::logInUser() {
     std::string username;
@@ -146,4 +172,3 @@ void ConsoleUI::logInUser() {
     std::cout << "Log in successful.\n";
     std::cout << "Welcome, " << currentUser->getName() << "!\n";
 }
-

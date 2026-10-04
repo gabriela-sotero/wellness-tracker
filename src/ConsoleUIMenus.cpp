@@ -75,6 +75,7 @@ bool ConsoleUI::loggedInMenu() {
     std::cout << "\n1. Log action\n";
     std::cout << "2. View progress\n";
     std::cout << "3. View profile\n";
+    std::cout << "4. Delete account\n";
     std::cout << "0. Log out\n";
     std::cout << "Choose an option: ";
 
@@ -110,6 +111,8 @@ bool ConsoleUI::loggedInMenu() {
         showHistoryMenu();
     } else if (option == "3") {
         showProfile();
+    } else if (option == "4") {
+        deleteAccount();
     } else if (option == "0") {
         logOut();
     } else {

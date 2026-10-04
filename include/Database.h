@@ -57,4 +57,7 @@ public:
         const std::string& username,
         const std::string& password
     );
+
+    // Permanently removes the account and all of its habit records.
+    bool deleteUser(int userId);
 };
