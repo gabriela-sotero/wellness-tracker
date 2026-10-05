@@ -72,7 +72,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
         QLineEdit {
             min-height: 34px;
             padding: 0 12px;
-            border: 1px solid #d5e2dd;
+            border: 2px solid #9fb7af;
             border-radius: 9px;
             background-color: white;
             color: #183b35;
