@@ -16,7 +16,8 @@ LevelProgress levelProgressForXp(int totalXp) {
     int level = 1;
     auto threshold = [](int levelNumber) -> long long {
         const long long previousLevel = levelNumber - 1;
-        return 35LL * previousLevel * previousLevel;
+        return static_cast<long long>(Constants::XP_LEVEL_BASE)
+            * previousLevel * previousLevel;
     };
 
     while (threshold(level + 1) <= xp) {
@@ -24,7 +25,7 @@ LevelProgress levelProgressForXp(int totalXp) {
     }
 
     const int currentThreshold = static_cast<int>(threshold(level));
-    const int xpForNextLevel = 35 * (2 * level - 1);
+    const int xpForNextLevel = Constants::XP_LEVEL_BASE * (2 * level - 1);
     return {level, xp - currentThreshold, xpForNextLevel};
 }
 

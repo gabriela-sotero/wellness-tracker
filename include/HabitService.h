@@ -27,7 +27,7 @@ struct LevelProgress {
     int xpForNextLevel;
 };
 
-// Level n starts at 35 * (n - 1)^2 total XP.
+// Level n starts at Constants::XP_LEVEL_BASE * (n - 1)^2 total XP.
 LevelProgress levelProgressForXp(int totalXp);
 
 // Totals for a range of days, already added up for the interface to show.
