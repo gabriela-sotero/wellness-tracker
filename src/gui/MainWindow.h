@@ -63,6 +63,8 @@ private:
 
     QLabel* profileName = nullptr;
     QLabel* profileMemberSince = nullptr;
+    QLabel* levelProgressLabel = nullptr;
+    QProgressBar* levelProgressBar = nullptr;
     std::vector<QLabel*> badgeImages;
     std::vector<QLabel*> badgeCaptions;
     std::vector<QLabel*> xpValues;
@@ -94,6 +96,7 @@ private:
     void logMeal(bool healthy);
     void logExercise();
     void logSleep();
+    QString levelUpMessage(int previousLevel) const;
     // toDate marks a period that is still filling up, like the current month.
     void showPeriod(
         const QString& period,

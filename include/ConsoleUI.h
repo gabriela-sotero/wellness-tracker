@@ -33,6 +33,8 @@ private:
     );
     void showHistoryMenu();
     void deleteAccount();
+    int currentLevel() const;
+    void reportLevelUp(int previousLevel) const;
     void logOut();
 
     // Menus. Return false when the app should exit.

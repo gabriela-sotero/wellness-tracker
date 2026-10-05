@@ -41,6 +41,10 @@ void ConsoleUI::showProfile() {
     std::cout << "Exercise:  " << profile.exerciseXp << " XP\n";
     std::cout << "Sleep:     " << profile.sleepXp << " XP\n";
     std::cout << "Total:     " << profile.totalXp << " XP\n";
+    std::cout << "Level " << profile.levelProgress.level << " ("
+              << profile.levelProgress.xpIntoLevel << " / "
+              << profile.levelProgress.xpForNextLevel
+              << " XP to next level)\n";
     std::cout << "\nCurrent goal streaks (days)\n";
     std::cout << "Water goal met:      " << profile.waterStreak << "\n";
     std::cout << "3 healthy meals:     " << profile.healthyMealsStreak << "\n";

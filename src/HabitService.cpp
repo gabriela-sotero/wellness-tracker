@@ -3,11 +3,30 @@
 #include "DateUtils.h"
 
 #include <iostream>
+#include <algorithm>
 #include <string>
 #include <vector>
 
 HabitService::HabitService(Database& database)
     : database(database) {
+}
+
+LevelProgress levelProgressForXp(int totalXp) {
+    const int xp = std::max(0, totalXp);
+    int level = 1;
+    auto threshold = [](int levelNumber) -> long long {
+        const long long previousLevel = levelNumber - 1;
+        return static_cast<long long>(Constants::XP_LEVEL_BASE)
+            * previousLevel * previousLevel;
+    };
+
+    while (threshold(level + 1) <= xp) {
+        ++level;
+    }
+
+    const int currentThreshold = static_cast<int>(threshold(level));
+    const int xpForNextLevel = Constants::XP_LEVEL_BASE * (2 * level - 1);
+    return {level, xp - currentThreshold, xpForNextLevel};
 }
 
 void HabitService::logWaterHabit(int userId, int ml) const {
@@ -222,6 +241,7 @@ PeriodSummary HabitService::periodSummary(
 
 ProfileSummary HabitService::profileSummary(int userId) const {
     ProfileSummary summary{};
+    summary.levelProgress = levelProgressForXp(0);
     auto user = database.getUserById(userId);
     auto firstDate = database.firstDailyRecordDate(userId);
 
@@ -253,6 +273,7 @@ ProfileSummary HabitService::profileSummary(int userId) const {
 
     summary.totalXp = summary.waterXp + summary.nutritionXp
         + summary.exerciseXp + summary.sleepXp;
+    summary.levelProgress = levelProgressForXp(summary.totalXp);
     summary.waterStreak = currentStreak(waterGoalMet);
     summary.healthyMealsStreak = currentStreak(healthyMealsGoalMet);
     summary.exerciseStreak = currentStreak(exerciseGoalMet);

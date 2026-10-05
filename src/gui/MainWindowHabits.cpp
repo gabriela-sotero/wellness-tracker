@@ -70,6 +70,14 @@ static void report(QLabel* feedback, const QString& message, bool logged) {
     feedback->setText(message);
 }
 
+QString MainWindow::levelUpMessage(int previousLevel) const {
+    const int newLevel = habitService.profileSummary(currentUser->getId())
+        .levelProgress.level;
+    return newLevel > previousLevel
+        ? QString("\nLevel up! You reached level %1.").arg(newLevel)
+        : QString();
+}
+
 void MainWindow::logWater() {
     bool valid = false;
     const int ml = waterInput->text().trimmed().toInt(&valid);
@@ -79,23 +87,32 @@ void MainWindow::logWater() {
         return;
     }
 
+    const int previousLevel = habitService.profileSummary(currentUser->getId())
+        .levelProgress.level;
     habitService.logWaterHabit(currentUser->getId(), ml);
     waterInput->clear();
-    report(habitFeedback, QString("Logged %1 ml of water.").arg(ml), true);
+    report(habitFeedback,
+           QString("Logged %1 ml of water.").arg(ml) + levelUpMessage(previousLevel), true);
 }
 
 void MainWindow::logMeal(bool healthy) {
+    const int previousLevel = habitService.profileSummary(currentUser->getId())
+        .levelProgress.level;
     habitService.logMealHabit(currentUser->getId(), healthy);
     report(
         habitFeedback,
-        healthy ? "Logged a healthy meal." : "Logged an unhealthy meal.",
+        (healthy ? QString("Logged a healthy meal.") : QString("Logged an unhealthy meal."))
+            + levelUpMessage(previousLevel),
         true
     );
 }
 
 void MainWindow::logExercise() {
+    const int previousLevel = habitService.profileSummary(currentUser->getId())
+        .levelProgress.level;
     habitService.logExerciseHabit(currentUser->getId());
-    report(habitFeedback, "Exercise marked as completed.", true);
+    report(habitFeedback,
+           QString("Exercise marked as completed.") + levelUpMessage(previousLevel), true);
 }
 
 void MainWindow::logSleep() {
@@ -107,7 +124,10 @@ void MainWindow::logSleep() {
         return;
     }
 
+    const int previousLevel = habitService.profileSummary(currentUser->getId())
+        .levelProgress.level;
     habitService.logSleepHabit(currentUser->getId(), hours);
     sleepInput->clear();
-    report(habitFeedback, QString("Logged %1 hours of sleep.").arg(hours), true);
+    report(habitFeedback,
+           QString("Logged %1 hours of sleep.").arg(hours) + levelUpMessage(previousLevel), true);
 }
