@@ -71,12 +71,15 @@ static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
 static void fillProgressRow(
     const ProgressRow& row,
     const QString& name,
+    const QString& rateDescription,
     int metDays,
     int totalDays,
     const QString& detail
 ) {
     const int percent = totalDays > 0 ? metDays * 100 / totalDays : 0;
-    row.label->setText(name + " · " + QString::number(percent) + "% consistency");
+    row.label->setText(
+        name + " · " + rateDescription.arg(percent)
+    );
     row.bar->setRange(0, totalDays > 0 ? totalDays : 1);
     row.bar->setValue(metDays);
     row.bar->setFormat(detail);
@@ -180,7 +183,8 @@ void MainWindow::showPeriod(
     const double averageWater =
         static_cast<double>(summary.consumedWaterMl) / summary.days;
     fillProgressRow(
-        waterRow, "Water", summary.waterGoalDays, summary.days,
+        waterRow, "Water", "%1% of days at goal",
+        summary.waterGoalDays, summary.days,
         QString::number(summary.waterGoalDays) + " of "
             + QString::number(summary.days) + " days · average "
             + QString::number(averageWater, 'f', 0) + " ml/day"
@@ -189,23 +193,26 @@ void MainWindow::showPeriod(
     const double averageHealthyMeals =
         static_cast<double>(summary.healthyMeals) / summary.days;
     fillProgressRow(
-        mealsRow, "Meals", summary.healthyMealsGoalDays, summary.days,
+        mealsRow, "Meals", "%1% of days at goal",
+        summary.healthyMealsGoalDays, summary.days,
         QString::number(summary.healthyMealsGoalDays) + " of "
             + QString::number(summary.days) + " days at goal · average "
             + QString::number(averageHealthyMeals, 'f', 1) + " healthy/day"
     );
 
     fillProgressRow(
-        exerciseRow, "Exercise", summary.exerciseDays, summary.days,
+        exerciseRow, "Exercise", "%1% of days completed",
+        summary.exerciseDays, summary.days,
         QString::number(summary.exerciseDays) + " of "
             + QString::number(summary.days) + " days completed"
     );
 
     const double averageSleep = summary.sleepHours / summary.days;
     fillProgressRow(
-        sleepRow, "Sleep", summary.sleepGoalDays, summary.days,
+        sleepRow, "Sleep", "%1% of nights at 8h goal",
+        summary.sleepGoalDays, summary.days,
         QString::number(summary.sleepGoalDays) + " of "
-            + QString::number(summary.days) + " nights at goal · average "
+            + QString::number(summary.days) + " nights · average across period "
             + QString::number(averageSleep, 'f', 1) + " h/night"
     );
 
