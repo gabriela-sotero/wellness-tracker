@@ -71,6 +71,8 @@ private:
     std::vector<QLabel*> streakValues;
 
     QLabel* progressHeading = nullptr;
+    QLabel* progressOverall = nullptr;
+    QProgressBar* progressOverallBar = nullptr;
     ProgressRow waterRow;
     ProgressRow mealsRow;
     ProgressRow exerciseRow;

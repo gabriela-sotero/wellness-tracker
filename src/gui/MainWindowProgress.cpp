@@ -71,15 +71,15 @@ static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
 static void fillProgressRow(
     const ProgressRow& row,
     const QString& name,
-    int points,
-    int value,
-    int maximum,
-    const QString& text
+    int metDays,
+    int totalDays,
+    const QString& detail
 ) {
-    row.label->setText(name + " - " + QString::number(points) + " XP");
-    row.bar->setMaximum(maximum > 0 ? maximum : 1);
-    row.bar->setValue(value < maximum ? value : maximum);
-    row.bar->setFormat(text);
+    const int percent = totalDays > 0 ? metDays * 100 / totalDays : 0;
+    row.label->setText(name + " · " + QString::number(percent) + "% consistency");
+    row.bar->setRange(0, totalDays > 0 ? totalDays : 1);
+    row.bar->setValue(metDays);
+    row.bar->setFormat(detail);
 }
 
 // Percent of a goal, reported past 100% when the goal is beaten.
@@ -103,6 +103,13 @@ QWidget* MainWindow::createProgressPage() {
     progressHeading = new QLabel(page);
     progressHeading->setWordWrap(true);
     layout->addWidget(progressHeading);
+
+    progressOverall = new QLabel(page);
+    progressOverall->setObjectName("value");
+    layout->addWidget(progressOverall);
+    progressOverallBar = new QProgressBar(page);
+    progressOverallBar->setFormat("%v of %m daily goals met");
+    layout->addWidget(progressOverallBar);
 
     waterRow = addProgressRow(layout, "Water");
     mealsRow = addProgressRow(layout, "Meals");
@@ -162,48 +169,51 @@ void MainWindow::showPeriod(
         );
     }
 
-    const int waterPercent = percentOf(summary.consumedWaterMl, summary.waterGoalMl);
+    const int goalOpportunities = summary.days * 4;
+    const int overallPercent = percentOf(summary.overallGoalsMet, goalOpportunities);
+    progressOverall->setText(
+        "Overall habit consistency · " + QString::number(overallPercent) + "%"
+    );
+    progressOverallBar->setRange(0, goalOpportunities > 0 ? goalOpportunities : 1);
+    progressOverallBar->setValue(summary.overallGoalsMet);
+
+    const double averageWater =
+        static_cast<double>(summary.consumedWaterMl) / summary.days;
     fillProgressRow(
-        waterRow, "Water", summary.waterPoints,
-        summary.consumedWaterMl, summary.waterGoalMl,
-        QString::number(summary.consumedWaterMl) + " / "
-            + QString::number(summary.waterGoalMl) + " ml ("
-            + QString::number(waterPercent) + "%)"
+        waterRow, "Water", summary.waterGoalDays, summary.days,
+        QString::number(summary.waterGoalDays) + " of "
+            + QString::number(summary.days) + " days · average "
+            + QString::number(averageWater, 'f', 0) + " ml/day"
     );
 
-    const int mealsGoal = Constants::HEALTHY_MEALS_GOAL * summary.days;
-    const int mealsPercent = percentOf(summary.healthyMeals, mealsGoal);
+    const double averageHealthyMeals =
+        static_cast<double>(summary.healthyMeals) / summary.days;
     fillProgressRow(
-        mealsRow, "Meals", summary.nutritionPoints,
-        summary.healthyMeals, mealsGoal,
-        QString::number(summary.healthyMeals) + " / " + QString::number(mealsGoal)
-            + " healthy, " + QString::number(summary.unhealthyMeals)
-            + " unhealthy (" + QString::number(mealsPercent) + "%)"
+        mealsRow, "Meals", summary.healthyMealsGoalDays, summary.days,
+        QString::number(summary.healthyMealsGoalDays) + " of "
+            + QString::number(summary.days) + " days at goal · average "
+            + QString::number(averageHealthyMeals, 'f', 1) + " healthy/day"
     );
 
-    const int exercisePercent = percentOf(summary.exerciseDays, summary.days);
     fillProgressRow(
-        exerciseRow, "Exercise", summary.exercisePoints,
-        summary.exerciseDays, summary.days,
-        summary.days == 1
-            ? QString(summary.exerciseDays > 0 ? "Completed" : "Not completed")
-            : QString::number(summary.exerciseDays) + " / "
-                  + QString::number(summary.days) + " days ("
-                  + QString::number(exercisePercent) + "%)"
+        exerciseRow, "Exercise", summary.exerciseDays, summary.days,
+        QString::number(summary.exerciseDays) + " of "
+            + QString::number(summary.days) + " days completed"
     );
 
-    // Tenths of an hour keep the bar accurate, since its value is an integer.
-    const int sleepPercent = percentOf(summary.sleepHours, summary.sleepGoalHours);
+    const double averageSleep = summary.sleepHours / summary.days;
     fillProgressRow(
-        sleepRow, "Sleep", summary.sleepPoints,
-        static_cast<int>(summary.sleepHours * 10),
-        static_cast<int>(summary.sleepGoalHours * 10),
-        QString::number(summary.sleepHours, 'f', 1) + " / "
-            + QString::number(summary.sleepGoalHours, 'f', 1) + " hours ("
-            + QString::number(sleepPercent) + "%)"
+        sleepRow, "Sleep", summary.sleepGoalDays, summary.days,
+        QString::number(summary.sleepGoalDays) + " of "
+            + QString::number(summary.days) + " nights at goal · average "
+            + QString::number(averageSleep, 'f', 1) + " h/night"
     );
 
-    progressTotal->setText("Total XP: " + QString::number(summary.totalPoints));
+    progressTotal->setText(
+        "Average daily score: "
+            + QString::number(static_cast<double>(summary.totalPoints) / summary.days, 'f', 0)
+            + " XP"
+    );
     showPage(ProgressPage);
 }
 
