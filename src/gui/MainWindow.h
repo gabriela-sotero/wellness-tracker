@@ -96,6 +96,7 @@ private:
     void logMeal(bool healthy);
     void logExercise();
     void logSleep();
+    QString levelUpMessage(int previousLevel) const;
     // toDate marks a period that is still filling up, like the current month.
     void showPeriod(
         const QString& period,
