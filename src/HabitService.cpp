@@ -268,7 +268,7 @@ ProfileSummary HabitService::profileSummary(int userId) const {
             record.healthyMealCount() >= Constants::HEALTHY_MEALS_GOAL
         );
         exerciseGoalMet.push_back(record.exerciseCompleted());
-        sleepGoalMet.push_back(record.sleptHours() > Constants::DEFAULT_SLEEP_GOAL_HOURS);
+        sleepGoalMet.push_back(record.sleptHours() >= Constants::DEFAULT_SLEEP_GOAL_HOURS);
     }
 
     summary.totalXp = summary.waterXp + summary.nutritionXp
