@@ -199,6 +199,74 @@ static void test_account_creation_date() {
     assert(!db.accountCreatedAt(9999).has_value());
 }
 
+static void test_sleep_streak_counts_exact_goal() {
+    Database db(":memory:");
+    db.createTables();
+
+    int userId = db.insertUser(
+        "sleep_test", "Sleep Test", "pw", std::nullopt, 2000);
+
+    std::vector<std::string> dates = util::lastDays(2);
+
+    saveDay(
+        db,
+        userId,
+        dates[0],
+        2000,
+        3,
+        Constants::DEFAULT_SLEEP_GOAL_HOURS
+    );
+
+    saveDay(
+        db,
+        userId,
+        dates[1],
+        2000,
+        3,
+        Constants::DEFAULT_SLEEP_GOAL_HOURS
+    );
+
+    HabitService service(db);
+    ProfileSummary profile = service.profileSummary(userId);
+
+    assert(profile.sleepStreak == 2);
+    assert(profile.sleepBestStreak == 2);
+}
+
+static void test_sleep_streak_rejects_below_goal() {
+    Database db(":memory:");
+    db.createTables();
+
+    int userId = db.insertUser(
+        "sleep_below", "Sleep Below", "pw", std::nullopt, 2000);
+
+    std::vector<std::string> dates = util::lastDays(2);
+
+    saveDay(
+        db,
+        userId,
+        dates[0],
+        2000,
+        3,
+        Constants::DEFAULT_SLEEP_GOAL_HOURS - 0.1
+    );
+
+    saveDay(
+        db,
+        userId,
+        dates[1],
+        2000,
+        3,
+        Constants::DEFAULT_SLEEP_GOAL_HOURS - 0.1
+    );
+
+    HabitService service(db);
+    ProfileSummary profile = service.profileSummary(userId);
+
+    assert(profile.sleepStreak == 0);
+    assert(profile.sleepBestStreak == 0);
+}
+
 void runHabitServiceTests() {
     test_log_water_accumulates_and_scores();
     test_log_meals_accumulates_and_scores();
@@ -210,4 +278,6 @@ void runHabitServiceTests() {
     test_badge_days_for_streak();
     test_best_streak_survives_a_break();
     test_account_creation_date();
+    test_sleep_streak_counts_exact_goal();
+    test_sleep_streak_rejects_below_goal();
 }
