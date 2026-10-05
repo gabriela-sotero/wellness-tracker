@@ -267,6 +267,36 @@ static void test_sleep_streak_rejects_below_goal() {
     assert(profile.sleepBestStreak == 0);
 }
 
+static void test_level_progress_thresholds() {
+    auto progress = levelProgressForXp(0);
+    assert(progress.level == 1);
+    assert(progress.xpIntoLevel == 0);
+    assert(progress.xpForNextLevel == 35);
+
+    progress = levelProgressForXp(34);
+    assert(progress.level == 1);
+    assert(progress.xpIntoLevel == 34);
+    assert(progress.xpForNextLevel == 35);
+
+    progress = levelProgressForXp(35);
+    assert(progress.level == 2);
+    assert(progress.xpIntoLevel == 0);
+    assert(progress.xpForNextLevel == 105);
+
+    progress = levelProgressForXp(139);
+    assert(progress.level == 2);
+    assert(progress.xpIntoLevel == 104);
+
+    progress = levelProgressForXp(140);
+    assert(progress.level == 3);
+    assert(progress.xpIntoLevel == 0);
+    assert(progress.xpForNextLevel == 175);
+
+    progress = levelProgressForXp(-10);
+    assert(progress.level == 1);
+    assert(progress.xpIntoLevel == 0);
+}
+
 void runHabitServiceTests() {
     test_log_water_accumulates_and_scores();
     test_log_meals_accumulates_and_scores();
@@ -280,4 +310,5 @@ void runHabitServiceTests() {
     test_account_creation_date();
     test_sleep_streak_counts_exact_goal();
     test_sleep_streak_rejects_below_goal();
+    test_level_progress_thresholds();
 }

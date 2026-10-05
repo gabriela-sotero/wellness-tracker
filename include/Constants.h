@@ -9,6 +9,7 @@ namespace Constants{
     constexpr int EXERCISE_MAX_SCORE = 300;
     constexpr int NUTRITION_MAX_SCORE = 300; // 3 per day
     constexpr int NUTRITION_UNHEALTHY_PENALTY = 50;
+    constexpr int XP_LEVEL_BASE = 35; // Total XP thresholds scale with this value.
     constexpr int HEALTHY_MEALS_GOAL = 3; // Healthy meals needed to keep the streak.
     // Days of streak that unlock each badge, lowest first.
     constexpr int BADGE_TIERS[] = {
