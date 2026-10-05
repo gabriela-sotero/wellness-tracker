@@ -34,7 +34,6 @@ QWidget* MainWindow::createHabitsPage() {
 
     auto* back = new QPushButton("Back", page);
     layout->addWidget(back);
-    layout->addStretch();
 
     connect(logWaterButton, &QPushButton::clicked, this, [this] {
         logWater();

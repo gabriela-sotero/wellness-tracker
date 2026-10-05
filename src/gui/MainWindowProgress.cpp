@@ -107,7 +107,7 @@ static int percentOf(double value, double goal) {
 
 QWidget* MainWindow::createProgressPage() {
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Progress");
+    auto* layout = startPage(page, "Progress", 860);
 
     auto* daily = new QPushButton("Today", page);
     auto* weekly = new QPushButton("Weekly", page);
@@ -136,7 +136,6 @@ QWidget* MainWindow::createProgressPage() {
 
     progressTotal = new QLabel(page);
     layout->addWidget(progressTotal);
-    layout->addStretch();
 
     auto* back = new QPushButton("Back", page);
     layout->addWidget(back);
@@ -297,7 +296,7 @@ static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
 
 QWidget* MainWindow::createProfilePage() {
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Profile");
+    auto* layout = startPage(page, "Profile", 860);
 
     auto* account = addCard(layout, QString());
     profileName = new QLabel(page);
@@ -354,7 +353,6 @@ QWidget* MainWindow::createProfilePage() {
         streakValues.push_back(addCardRow(streaks, goal));
     }
 
-    layout->addStretch();
     auto* back = new QPushButton("Back", page);
     auto* deleteAccount = new QPushButton("Delete account", page);
     deleteAccount->setStyleSheet("color: #a32121;");

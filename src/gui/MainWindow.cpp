@@ -133,7 +133,7 @@ QWidget* MainWindow::createStartPage() {
     subtitle->setObjectName("subtitle");
     subtitle->setWordWrap(true);
     layout->addWidget(subtitle);
-    layout->addStretch();
+    layout->addSpacing(24);
 
     auto* login = new QPushButton("Log in", page);
     auto* signup = new QPushButton("Create an account", page);
@@ -157,7 +157,7 @@ QWidget* MainWindow::createHomePage() {
     homeGreeting = new QLabel(page);
     homeGreeting->setWordWrap(true);
     layout->addWidget(homeGreeting);
-    layout->addStretch();
+    layout->addSpacing(24);
 
     auto* habits = new QPushButton("Log habits", page);
     auto* progress = new QPushButton("View progress", page);

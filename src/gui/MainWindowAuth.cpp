@@ -21,7 +21,6 @@ QWidget* MainWindow::createLoginPage() {
     auto* back = new QPushButton("Back", page);
     layout->addWidget(signIn);
     layout->addWidget(back);
-    layout->addStretch();
 
     connect(signIn, &QPushButton::clicked, this, [this] {
         attemptLogin();
@@ -53,7 +52,6 @@ QWidget* MainWindow::createSignupPage() {
     auto* back = new QPushButton("Back", page);
     layout->addWidget(create);
     layout->addWidget(back);
-    layout->addStretch();
 
     connect(create, &QPushButton::clicked, this, [this] {
         attemptSignup();

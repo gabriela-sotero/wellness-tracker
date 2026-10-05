@@ -3,19 +3,40 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QSizePolicy>
 #include <QVBoxLayout>
 #include <QWidget>
 
 // Starts a page with its title and returns the layout, so each page only has
 // to add the widgets that come below the title.
-inline QVBoxLayout* startPage(QWidget* page, const QString& title) {
+inline QVBoxLayout* startPage(
+    QWidget* page,
+    const QString& title,
+    int maxWidth = 480
+) {
     page->setObjectName("page");
 
-    auto* layout = new QVBoxLayout(page);
+    auto* pageLayout = new QVBoxLayout(page);
+    pageLayout->setContentsMargins(0, 0, 0, 0);
+    pageLayout->addStretch();
+
+    auto* centered = new QHBoxLayout;
+    centered->setContentsMargins(0, 0, 0, 0);
+    centered->addStretch();
+
+    auto* column = new QWidget(page);
+    column->setMaximumWidth(maxWidth);
+    column->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    centered->addWidget(column);
+    centered->addStretch();
+    pageLayout->addLayout(centered);
+    pageLayout->addStretch();
+
+    auto* layout = new QVBoxLayout(column);
     layout->setContentsMargins(30, 30, 30, 30);
     layout->setSpacing(10);
 
-    auto* label = new QLabel(title, page);
+    auto* label = new QLabel(title, column);
     label->setObjectName("title");
     label->setWordWrap(true);
     layout->addWidget(label);
