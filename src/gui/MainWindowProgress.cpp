@@ -12,6 +12,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <algorithm>
+
 #include "Constants.h"
 #include "DateUtils.h"
 #include "PageLayout.h"
@@ -82,6 +84,19 @@ static void fillProgressRow(
     );
     row.bar->setRange(0, totalDays > 0 ? totalDays : 1);
     row.bar->setValue(metDays);
+    row.bar->setFormat(detail);
+}
+
+static void fillDailyProgressRow(
+    const ProgressRow& row,
+    const QString& label,
+    int value,
+    int maximum,
+    const QString& detail
+) {
+    row.label->setText(label);
+    row.bar->setRange(0, maximum > 0 ? maximum : 1);
+    row.bar->setValue(std::min(value, maximum));
     row.bar->setFormat(detail);
 }
 
@@ -170,6 +185,50 @@ void MainWindow::showPeriod(
                 + QString::fromStdString(summary.firstDate) + " to "
                 + QString::fromStdString(summary.lastDate) + ")"
         );
+    }
+
+    if (summary.days == 1) {
+        progressOverall->setText(
+            "Goals completed today · " + QString::number(summary.overallGoalsMet) + " / 4"
+        );
+        progressOverallBar->setRange(0, 4);
+        progressOverallBar->setValue(summary.overallGoalsMet);
+
+        fillDailyProgressRow(
+            waterRow,
+            "Water · " + QString::number(summary.consumedWaterMl) + " / "
+                + QString::number(summary.waterGoalMl) + " ml",
+            summary.consumedWaterMl,
+            summary.waterGoalMl,
+            QString::number(summary.consumedWaterMl) + " ml recorded"
+        );
+        fillDailyProgressRow(
+            mealsRow,
+            "Meals · " + QString::number(summary.healthyMeals) + " healthy, "
+                + QString::number(summary.unhealthyMeals) + " unhealthy",
+            summary.healthyMeals,
+            Constants::HEALTHY_MEALS_GOAL,
+            QString::number(summary.healthyMeals) + " / "
+                + QString::number(Constants::HEALTHY_MEALS_GOAL) + " healthy meals"
+        );
+        fillDailyProgressRow(
+            exerciseRow,
+            summary.exerciseDays > 0 ? "Exercise · Completed" : "Exercise · Not completed",
+            summary.exerciseDays,
+            1,
+            summary.exerciseDays > 0 ? "Completed today" : "Not completed today"
+        );
+        fillDailyProgressRow(
+            sleepRow,
+            "Sleep · " + QString::number(summary.sleepHours, 'f', 1) + " / "
+                + QString::number(summary.sleepGoalHours, 'f', 1) + " h",
+            static_cast<int>(summary.sleepHours * 10),
+            static_cast<int>(summary.sleepGoalHours * 10),
+            QString::number(summary.sleepHours, 'f', 1) + " hours recorded"
+        );
+        progressTotal->setText("Points earned today: " + QString::number(summary.totalPoints));
+        showPage(ProgressPage);
+        return;
     }
 
     const int goalOpportunities = summary.days * 4;
