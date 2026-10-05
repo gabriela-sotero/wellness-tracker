@@ -30,6 +30,10 @@ target_link_libraries(wellness_core PUBLIC ${SQLite3_LIBRARIES})
 add_executable(wellness_tracker src/main.cpp)
 target_link_libraries(wellness_tracker PRIVATE wellness_core)
 
+# Development utility for previewing profile badges with seeded local data.
+add_executable(seed_demo_profile tools/seed_demo_profile.cpp)
+target_link_libraries(seed_demo_profile PRIVATE wellness_core)
+
 # Qt Widgets application. Built by default, so a missing Qt fails at configure
 # time instead of silently producing no GUI. Configure with -DBUILD_GUI=OFF to
 # build only the core, the CLI and the tests.

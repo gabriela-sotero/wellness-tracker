@@ -129,6 +129,15 @@ The profile screen shows one streak badge per habit, loaded from `assets/badges/
 python3 tools/generate_badges.py
 ```
 
+To create a local demo account with a year of habit records for previewing profile badges:
+
+```bash
+cmake --build build --target seed_demo_profile
+./build/seed_demo_profile
+```
+
+Sign in with username `badge_demo` and password `demo1234`. The utility adds this account to `data/wellness.db`; if it already exists, it leaves its data unchanged.
+
 ## Tests
 
 ```bash
