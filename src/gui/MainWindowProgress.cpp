@@ -231,6 +231,14 @@ QWidget* MainWindow::createProfilePage() {
     account->addWidget(profileName);
     account->addWidget(profileMemberSince);
 
+    auto* levelCard = addCard(layout, "Level");
+    levelProgressLabel = new QLabel(page);
+    levelProgressLabel->setObjectName("value");
+    levelProgressBar = new QProgressBar(page);
+    levelProgressBar->setTextVisible(false);
+    levelCard->addWidget(levelProgressLabel);
+    levelCard->addWidget(levelProgressBar);
+
     auto* badges = addCard(layout, "Badges");
     auto* badgeRow = new QHBoxLayout;
     badgeRow->setContentsMargins(0, 4, 0, 0);
@@ -340,6 +348,16 @@ void MainWindow::showProfile() {
             ? "Member since " + QString::fromStdString(*createdAt)
             : QString("Created before the app recorded a date")
     );
+
+    const LevelProgress level = profile.levelProgress;
+    levelProgressLabel->setText(
+        QString("Level %1 — %2 / %3 XP")
+            .arg(level.level)
+            .arg(level.xpIntoLevel)
+            .arg(level.xpForNextLevel)
+    );
+    levelProgressBar->setRange(0, level.xpForNextLevel);
+    levelProgressBar->setValue(level.xpIntoLevel);
 
     const QString habits[] = {"water", "meals", "exercise"};
     const int best[] = {

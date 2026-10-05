@@ -21,6 +21,15 @@ struct SleepSummary {
     int points;
 };
 
+struct LevelProgress {
+    int level;
+    int xpIntoLevel;
+    int xpForNextLevel;
+};
+
+// Level n starts at 35 * (n - 1)^2 total XP.
+LevelProgress levelProgressForXp(int totalXp);
+
 // Totals for a range of days, already added up for the interface to show.
 struct PeriodSummary {
     std::string firstDate;
@@ -48,6 +57,7 @@ struct ProfileSummary {
     int exerciseXp;
     int sleepXp;
     int totalXp;
+    LevelProgress levelProgress;
     int waterStreak;
     int healthyMealsStreak;
     int exerciseStreak;

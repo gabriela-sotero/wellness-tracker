@@ -63,6 +63,8 @@ private:
 
     QLabel* profileName = nullptr;
     QLabel* profileMemberSince = nullptr;
+    QLabel* levelProgressLabel = nullptr;
+    QProgressBar* levelProgressBar = nullptr;
     std::vector<QLabel*> badgeImages;
     std::vector<QLabel*> badgeCaptions;
     std::vector<QLabel*> xpValues;
