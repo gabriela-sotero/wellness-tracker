@@ -1,56 +1,41 @@
 # Wellness Tracker
 
-Wellness Tracker is a C++ project for tracking daily wellness habits with simple gamification.
+Wellness Tracker is a personal habit journal built with C++20. It helps you keep a daily record of water, meals, exercise, and sleep, then look back on your routines over time. The app includes a console interface and a Qt Widgets GUI backed by the same local SQLite database.
 
-The project is being developed for an Object-Oriented Data Structures course, with focus on:
+## Features
 
-- Object-oriented programming
-- Inheritance and polymorphism
-- Manually implemented data structures
-- Data persistence
-- Clean separation between core logic and user interface
-- Console and Qt Widgets interfaces
+- Create an account, sign in, log out, and permanently delete an account with its habit data.
+- Keep a daily record of water, meals, exercise, and sleep.
+- Review daily, weekly, month-to-date, and year-to-date progress.
+- View lifetime XP, habit streaks, and streak badges for water, meals, and exercise.
+- Gain XP and levels. Level `n` starts at `XP_LEVEL_BASE × (n − 1)²` total XP; the current base is `35`.
+- Get a level-up notification when recording a habit crosses a level threshold.
 
-## Tracked Habits
-
-The initial version includes:
-
-- Water intake
-- Meals
-- Sleep
-- Exercise
-
-## Planned Features
-
-- User registration and login
-- Daily habit tracking
-- Daily score
-- History
-- Weekly summary
-- Habit streaks
-- Groups
-- Weekly ranking
-- Local data persistence
+The console and GUI share `data/wellness.db`. Run either app from the repository root so the database and badge artwork paths resolve correctly.
 
 ## Project Structure
 
 ```text
 wellness-tracker/
 ├── CMakeLists.txt
-├── .gitignore
 ├── README.md
 ├── docs/
 │   └── specification.md
 ├── data/
 │   └── .gitkeep
+├── assets/
+│   └── badges/
 ├── include/
 ├── src/
-└── tests/
+│   └── gui/
+├── tests/
+└── tools/
+    └── generate_badges.py
 ```
 
 ## Documentation
 
-The current project specification is available in:
+Course scope and design notes are available in:
 
 ```text
 docs/specification.md
@@ -58,9 +43,7 @@ docs/specification.md
 
 ## Status
 
-🚧 In development.
-
-The project is currently in its initial structure and core modeling phase.
+🚧 In development. Account management, habit tracking, progress summaries, streak badges, and XP levels are implemented.
 
 ## Requirements
 
