@@ -82,6 +82,7 @@ void showAccountMessage(
     const QString& title,
     const QString& message
 ) {
+    // Centralize dialog styling and execution for account-editing outcomes.
     QMessageBox dialog(icon, title, message, QMessageBox::Ok, parent);
     dialog.setStyleSheet(accountDialogStyle);
     dialog.exec();
@@ -90,6 +91,7 @@ void showAccountMessage(
 
 // Adds a habit row, starting empty until a period is chosen.
 static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
+    // Return widget pointers because later period selections update these controls.
     QWidget* page = layout->parentWidget();
 
     ProgressRow row;
@@ -111,6 +113,7 @@ static void fillProgressRow(
     int totalDays,
     const QString& detail
 ) {
+    // Long-period values show goal frequency; detail text preserves raw totals.
     const int percent = totalDays > 0 ? metDays * 100 / totalDays : 0;
     row.label->setText(
         name + " · " + rateDescription.arg(percent)
@@ -127,6 +130,7 @@ static void fillDailyProgressRow(
     int maximum,
     const QString& detail
 ) {
+    // A one-day view displays measured amounts rather than a percentage of days.
     row.label->setText(label);
     row.bar->setRange(0, maximum > 0 ? maximum : 1);
     row.bar->setValue(std::min(value, maximum));
@@ -135,10 +139,12 @@ static void fillDailyProgressRow(
 
 // Percent of a goal, reported past 100% when the goal is beaten.
 static int percentOf(double value, double goal) {
+    // A zero goal has no meaningful percentage and is reported as zero.
     return goal > 0 ? static_cast<int>(value * 100.0 / goal) : 0;
 }
 
 QWidget* MainWindow::createProgressPage() {
+    // Build the reusable progress controls; period buttons supply data ranges.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Progress", 860);
 
@@ -196,6 +202,7 @@ void MainWindow::showPeriod(
     const std::vector<std::string>& dates,
     bool toDate
 ) {
+    // The service owns aggregation; this method maps its summary into widgets.
     const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
 
     if (summary.days == 0) {
@@ -318,6 +325,7 @@ void MainWindow::showPeriod(
 // Badge artwork ships as SVG under assets/badges, read relative to the working
 // directory like the database is. Qt rasterises the file at the size asked for.
 static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
+    // The highest unlocked tier determines the SVG; zero selects the locked art.
     const QString file = badgeDays > 0
         ? habit + "-" + QString("%1").arg(badgeDays, 3, 10, QChar('0')) + ".svg"
         : QString("locked.svg");
@@ -328,6 +336,7 @@ static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
 }
 
 QWidget* MainWindow::createProfilePage() {
+    // Construct profile widgets once so showProfile can refresh the same controls.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Profile", 860);
 
@@ -351,6 +360,7 @@ QWidget* MainWindow::createProfilePage() {
     waterGoalRow->addWidget(editWaterGoal);
     personalDetails->addLayout(waterGoalRow);
 
+    // Keep the weight row available so a person can add weight later as well.
     profileWeightRow = new QWidget(page);
     auto* weightRow = new QHBoxLayout(profileWeightRow);
     weightRow->setContentsMargins(0, 0, 0, 0);
@@ -477,6 +487,7 @@ QWidget* MainWindow::createProfilePage() {
 }
 
 void MainWindow::showProfile() {
+    // Read model and summary values, then render them without recalculating rules.
     const int userId = currentUser->getId();
     const ProfileSummary profile = habitService.profileSummary(userId);
     const auto createdAt = database.accountCreatedAt(userId);
@@ -538,6 +549,7 @@ void MainWindow::showProfile() {
 }
 
 void MainWindow::editDailyWaterGoal() {
+    // Persist the edited goal while retaining the optional weight unchanged.
     if (!currentUser.has_value()) {
         return;
     }
@@ -571,6 +583,7 @@ void MainWindow::editDailyWaterGoal() {
 }
 
 void MainWindow::editWeight() {
+    // Persist an entered weight while retaining the current water goal.
     if (!currentUser.has_value()) {
         return;
     }

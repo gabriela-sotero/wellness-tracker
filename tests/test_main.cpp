@@ -1,5 +1,6 @@
 #include <iostream>
 
+// Central runner: each test module exposes one function to execute its cases.
 // These functions are implemented in the other test files.
 void runWaterTests();
 void runNutritionTests();

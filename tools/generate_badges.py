@@ -38,6 +38,7 @@ HEXAGON = "35,2 63,17 63,47 35,62 7,47 7,17"
 
 
 def icon_group(habit, colour):
+    """Scale and style one habit icon for insertion into a badge SVG."""
     # The icons are drawn on a 24x24 grid; 1.15 scales them to fill the shape.
     scale = 1.15
     offset = 35 - (24 * scale) / 2
@@ -52,6 +53,7 @@ def icon_group(habit, colour):
 
 
 def badge_svg(habit, days, rank):
+    """Build the SVG markup for one habit's streak tier."""
     _, fill, border, ink = rank
     shape = (
         f'<circle cx="35" cy="32" r="28" fill="{fill}" '
@@ -75,6 +77,7 @@ def badge_svg(habit, days, rank):
 
 
 def locked_svg():
+    """Build the artwork shown when a habit has no unlocked tier."""
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 86" '
         'width="70" height="86">'
@@ -93,6 +96,7 @@ def locked_svg():
 
 
 def main():
+    """Generate the SVG file for every habit and configured streak tier."""
     out = Path(__file__).resolve().parent.parent / "assets" / "badges"
     out.mkdir(parents=True, exist_ok=True)
 

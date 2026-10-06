@@ -11,6 +11,7 @@
 #include "DateUtils.h"
 
 int main(int argc, char* argv[]) {
+    // --reset is explicit because this utility replaces the demo account's data.
     const bool resetDemo = argc == 2 && std::string(argv[1]) == "--reset";
     if (argc > 2 || (argc == 2 && !resetDemo)) {
         std::cerr << "Usage: seed_demo_profile [--reset]\n";
@@ -46,6 +47,7 @@ int main(int argc, char* argv[]) {
     }
 
     const std::vector<std::string> dates = util::lastDays(365);
+    // A fixed seed makes generated preview history repeatable across runs.
     std::mt19937 random(20261005);
     std::uniform_real_distribution<double> chance(0.0, 1.0);
     std::uniform_real_distribution<double> sleepVariation(-1.3, 1.5);
@@ -55,6 +57,7 @@ int main(int argc, char* argv[]) {
     std::uniform_int_distribution<int> healthyMealsOnRoughDay(0, 2);
     std::uniform_int_distribution<int> unhealthyMeals(0, 2);
 
+    // Gradually raise the chance of meeting goals while retaining daily variation.
     for (std::size_t index = 0; index < dates.size(); ++index) {
         const double yearProgress = dates.size() > 1
             ? static_cast<double>(index) / static_cast<double>(dates.size() - 1)

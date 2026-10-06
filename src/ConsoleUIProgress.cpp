@@ -32,6 +32,7 @@ void ConsoleUI::showDailyStats() {
 }
 
 void ConsoleUI::showProfile() {
+    // Render a view from a value summary; the UI does not calculate streaks itself.
     const ProfileSummary profile = habitService.profileSummary(currentUser->getId());
 
     std::cout << "\n--- Profile: " << currentUser->getName() << " ---\n";
@@ -56,6 +57,7 @@ void ConsoleUI::showPeriodStats(
     const std::string& period,
     const std::vector<std::string>& dates
 ) {
+    // Aggregate calculations come from HabitService; this function only formats output.
     const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
 
     if (summary.days == 0) {

@@ -14,6 +14,8 @@ inline QVBoxLayout* startPage(
     const QString& title,
     int maxWidth = 480
 ) {
+    // Each page keeps its own bounded column inside the stacked page widget.
+    // Outer stretches center that column without stretching its internal groups.
     page->setObjectName("page");
 
     auto* pageLayout = new QVBoxLayout(page);
@@ -50,6 +52,7 @@ inline QLineEdit* addField(
     const QString& label,
     bool password = false
 ) {
+    // The returned input is also stored by the page for validation and clearing.
     QWidget* page = layout->parentWidget();
     layout->addWidget(new QLabel(label, page));
 
@@ -65,6 +68,7 @@ inline QLineEdit* addField(
 
 // Adds the red label each page uses to report errors.
 inline QLabel* addFeedback(QVBoxLayout* layout) {
+    // Reuse a named label so stylesheets can format feedback consistently.
     auto* feedback = new QLabel(layout->parentWidget());
     feedback->setObjectName("feedback");
     feedback->setWordWrap(true);
@@ -72,9 +76,11 @@ inline QLabel* addFeedback(QVBoxLayout* layout) {
     return feedback;
 }
 
-// A white panel that groups one section of a page. Returns the layout to fill
-// with the section's content.
+// A white panel that groups one section of a page. Returning its inner layout
+// lets callers add content without managing the card widget itself.
 inline QVBoxLayout* addCard(QVBoxLayout* layout, const QString& title) {
+    // Return the card's inner layout so callers can add content without exposing
+    // the card widget's construction details.
     auto* card = new QWidget(layout->parentWidget());
     card->setObjectName("card");
     // Without this a plain QWidget ignores the stylesheet background.
@@ -97,6 +103,7 @@ inline QVBoxLayout* addCard(QVBoxLayout* layout, const QString& title) {
 // A name on the left and its value on the right. Returns the value label, which
 // the page fills in when it has data.
 inline QLabel* addCardRow(QVBoxLayout* card, const QString& name) {
+    // Keep the caption and value aligned in one reusable horizontal row.
     QWidget* parent = card->parentWidget();
 
     auto* label = new QLabel(name, parent);

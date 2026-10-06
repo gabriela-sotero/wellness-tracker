@@ -6,6 +6,7 @@
 #include "NutritionHabit.h"
 #include "Constants.h"
 
+// Covers NutritionHabit goals, scoring caps, unhealthy penalties, and validation.
 static void test_nutrition_initial_state() {
     constexpr int goalMeals = 3;
     NutritionHabit n(goalMeals);

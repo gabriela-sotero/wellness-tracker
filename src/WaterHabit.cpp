@@ -10,10 +10,12 @@ WaterHabit::WaterHabit(int goalMl):
 }
 
 int WaterHabit::calculateScore() const { 
+    // Scale capped goal progress to the water habit's configured score maximum.
     return std::round(WaterHabit::progress() * Constants::WATER_MAX_SCORE);
 }
 
 double WaterHabit::progress() const { 
+    // Values above the goal count as complete, not as progress above 100%.
     double ratio = double(consumedMl) / goalMl;
     return std::min(ratio, 1.0);
 }

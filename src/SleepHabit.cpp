@@ -13,10 +13,12 @@ SleepHabit::SleepHabit(double goalHours)
 }
 
 int SleepHabit::calculateScore() const {
+    // Convert capped goal progress into the configured maximum sleep score.
     return static_cast<int>(std::round(progress() * Constants::SLEEP_MAX_SCORE));
 }
 
 double SleepHabit::progress() const {
+    // Sleeping beyond the goal does not earn more than full progress.
     return std::min(sleptHours / goalHours, 1.0);
 }
 

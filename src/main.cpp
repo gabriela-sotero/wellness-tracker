@@ -2,6 +2,7 @@
 #include "Database.h"
 
 int main() {
+    // Keep Database alive for the entire lifetime of ConsoleUI and its service.
     Database database("data/wellness.db");
     database.createTables();
 

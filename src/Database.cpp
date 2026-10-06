@@ -12,6 +12,7 @@ namespace {
     }
 }
 
+// Database owns the SQLite handle opened here; callers share the wrapper object.
 Database::Database(const std::string& path)
     : db(nullptr) {
     int result = sqlite3_open(path.c_str(), &db);
@@ -24,12 +25,15 @@ Database::Database(const std::string& path)
     }
 }
 
+// RAII cleanup closes the native connection when the wrapper leaves scope.
 Database::~Database() {
     if (db != nullptr) {
         sqlite3_close(db);
     }
 }
 
+// Defines the relational schema. Foreign keys tie each habit log to one daily
+// record, and each daily record belongs to one user.
 void Database::createTables() {
     const char* sql = R"(
         PRAGMA foreign_keys = ON;
@@ -99,6 +103,7 @@ void Database::createTables() {
     std::cout << "Tables created successfully.\n";
 }
 
+// Prepared statements bind all user-provided values instead of interpolating SQL.
 int Database::insertUser(
     const std::string& username,
     const std::string& name,
@@ -241,6 +246,7 @@ int Database::insertUser(
     return userId;
 }
 
+// Converts the selected row into a User value; SQL null weight stays optional.
 std::optional<User> Database::getUserById(int id) {
     const char* sql =
         "SELECT id, username, name, weight_kg, water_goal_ml "
@@ -318,6 +324,7 @@ bool Database::updateUserMetrics(
     std::optional<double> weightKg,
     int waterGoalMl
 ) {
+    // Reject invalid metrics before preparing an update so the stored state stays valid.
     if (userId <= 0 || waterGoalMl <= 0
         || (weightKg.has_value() && weightKg.value() <= 0.0)) {
         return false;
@@ -346,6 +353,7 @@ bool Database::updateUserMetrics(
 }
 
 std::optional<std::string> Database::accountCreatedAt(int userId) {
+    // Older accounts may have a null creation date, represented as nullopt.
     const char* sql = "SELECT created_at FROM users WHERE id = ?;";
     sqlite3_stmt* statement = nullptr;
     if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
@@ -368,6 +376,7 @@ std::optional<std::string> Database::accountCreatedAt(int userId) {
 }
 
 std::optional<std::string> Database::firstDailyRecordDate(int userId) {
+    // MIN(date) establishes how far back lifetime streak and XP calculations begin.
     const char* sql = "SELECT MIN(date) FROM daily_records WHERE user_id = ?;";
     sqlite3_stmt* statement = nullptr;
     if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
@@ -392,6 +401,7 @@ std::optional<std::string> Database::firstDailyRecordDate(int userId) {
 std::optional<User> Database::getUserByUsername(
     const std::string& username
 ) {
+    // Username is unique, so this query returns at most one account.
     const char* sql =
         "SELECT id, username, name, weight_kg, water_goal_ml "
         "FROM users "
@@ -473,6 +483,7 @@ std::optional<User> Database::authenticate(
     const std::string& username,
     const std::string& password
 ) {
+    // Read the stored hash first; return account data only after credentials match.
     const char* sql =
         "SELECT password_hash FROM users WHERE username = ?;";
 
@@ -521,6 +532,8 @@ std::optional<User> Database::authenticate(
 }
 
 bool Database::deleteUser(int userId) {
+    // Child logs are removed before their parent rows in one transaction. A
+    // failure rolls back the whole deletion instead of leaving partial data.
     if (userId <= 0 || sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr) != SQLITE_OK) {
         return false;
     }
@@ -626,6 +639,8 @@ DailyRecord Database::loadOrCreateDailyRecord(
 }
 
 void Database::saveDailyRecord(const DailyRecord& record) {
+    // Several tables store one record's habit data; the unique user/date key
+    // lets this routine update an existing day without duplicating it.
     // 1) Ensure the day row exists (no-op if it already does).
     const char* insertDay =
         "INSERT INTO daily_records (user_id, date) "

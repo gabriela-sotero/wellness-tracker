@@ -3,6 +3,8 @@
 #include <optional>
 #include <string>
 
+// Account model with private state and read-only getters. Persisted changes go
+// through Database; a newly loaded User represents the updated account data.
 class User {
 private:
     int id;
@@ -12,7 +14,7 @@ private:
     int waterGoalMl;
 
 public:
-    // Username and name are passed by const reference to avoid unnecessary string copies.
+    // Constructs an account with no stored weight.
     User(
         int id,
         const std::string& username,
@@ -20,7 +22,7 @@ public:
         int waterGoalMl
     );
 
-    // Overloaded constructor used when the user also provides a weight.
+    // Overload used when the account has a recorded weight.
     User(
         int id,
         const std::string& username,
@@ -29,17 +31,15 @@ public:
         double weightKg
     );
 
+    // Getters expose account state without allowing callers to mutate its fields.
     int getId() const;
 
-    // First const protects the returned string; second const prevents this method from modifying the User.
     const std::string& getUsername() const;
-
 
     const std::string& getName() const;
 
-    // First const protects the returned optional; second const prevents this method from modifying the User.
     const std::optional<double>& getWeightKg() const;
 
-    // Daily water goal in ml (defaults to Constants::DEFAULT_WATER_GOAL_ML at registration).
+    // Returns the daily water goal in milliliters.
     int getWaterGoalMl() const;
 };

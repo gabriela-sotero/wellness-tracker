@@ -11,6 +11,7 @@
 
 // Returns no answer when the input stream closes.
 std::optional<bool> ConsoleUI::askYesNo(const std::string& question) {
+    // Keep asking until input is valid; nullopt propagates end-of-input to callers.
     while (true) {
         std::string answer;
 
@@ -37,6 +38,7 @@ std::optional<bool> ConsoleUI::askYesNo(const std::string& question) {
 }
 // Handles user sign-up through the console interface.
 void ConsoleUI::signUpUser() {
+    // Collect and validate account fields here; Database owns persistence.
     std::string username;
     std::string name;
     std::string password;
@@ -124,6 +126,7 @@ void ConsoleUI::signUpUser() {
 }
 
 void ConsoleUI::deleteAccount() {
+    // Require both explicit confirmation and password re-authentication before deletion.
     const auto confirmed = askYesNo(
         "Permanently delete your account and all its habit data?"
     );
@@ -151,6 +154,7 @@ void ConsoleUI::deleteAccount() {
 
 // Authenticates a user and starts a session on success.
 void ConsoleUI::logInUser() {
+    // Store the returned User value only after Database verifies the credentials.
     std::string username;
     std::string password;
 

@@ -8,6 +8,8 @@
 #include "HabitService.h"
 #include "User.h"
 
+// Coordinates text menus and input. It borrows Database, composes a
+// HabitService, and stores the authenticated account for the current session.
 class ConsoleUI {
 private:
     Database& database;
@@ -42,7 +44,9 @@ private:
     bool loggedInMenu();
 
 public:
+    // Uses the connection created by the caller for all interface operations.
     ConsoleUI(Database& database);
 
+    // Runs the menu loop until the user chooses to exit.
     void run();
 };

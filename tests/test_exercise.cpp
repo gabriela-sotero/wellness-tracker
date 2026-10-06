@@ -7,6 +7,7 @@
 #include "ExerciseHabit.h"
 #include "HabitService.h"
 
+// Covers ExerciseHabit state, scoring, and persistence through HabitService.
 static void test_exercise_habit_initial_state() {
     ExerciseHabit exercise;
 

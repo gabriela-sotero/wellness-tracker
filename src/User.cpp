@@ -1,6 +1,6 @@
 #include "User.h"
 
-// No weight is stored when the user chooses not to provide one.
+// This overload represents the absence of weight explicitly with nullopt.
 User::User(
     int id,
     const std::string& username,
@@ -14,7 +14,7 @@ User::User(
       waterGoalMl(waterGoalMl) {
 }
 
-// Overloaded constructor for users who provide their weight.
+// The overload preserves a supplied weight as an optional value in the model.
 User::User(
     int id,
     const std::string& username,

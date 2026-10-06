@@ -7,10 +7,12 @@
 #include <string>
 #include <vector>
 
+// Store a non-owning reference so all service operations use the app's connection.
 HabitService::HabitService(Database& database)
     : database(database) {
 }
 
+// Finds the greatest level threshold not exceeding the user's total XP.
 LevelProgress levelProgressForXp(int totalXp) {
     const int xp = std::max(0, totalXp);
     int level = 1;
@@ -30,6 +32,7 @@ LevelProgress levelProgressForXp(int totalXp) {
 }
 
 void HabitService::logWaterHabit(int userId, int ml) const {
+    // Each logging method follows the same unit of work: load, mutate, save.
     std::string date = util::today();
 
     if (auto user = database.getUserById(userId)) {
@@ -162,6 +165,7 @@ SleepSummary HabitService::sleepSummary(
 
 // The longest run of met days anywhere in the history.
 static int longestStreak(const std::vector<bool>& met) {
+    // Reset the running count on a missed day and keep the largest run found.
     int longest = 0;
     int run = 0;
 
@@ -176,6 +180,7 @@ static int longestStreak(const std::vector<bool>& met) {
 }
 
 int badgeDaysFor(int streak) {
+    // Iterate ascending thresholds so the final match is the highest unlocked tier.
     int days = 0;
 
     for (int tier = 0; tier < Constants::BADGE_TIER_COUNT; ++tier) {
@@ -207,6 +212,7 @@ PeriodSummary HabitService::periodSummary(
     int userId,
     const std::vector<std::string>& dates
 ) const {
+    // A missing user or empty range has no meaningful period summary.
     PeriodSummary summary{};
     auto user = database.getUserById(userId);
 
@@ -220,6 +226,8 @@ PeriodSummary HabitService::periodSummary(
     summary.waterGoalMl = user->getWaterGoalMl() * summary.days;
     summary.sleepGoalHours = Constants::DEFAULT_SLEEP_GOAL_HOURS * summary.days;
 
+    // Accumulate one day's measurements at a time; goal-day counts are distinct
+    // from totals because they count successful days rather than logged units.
     for (const std::string& date : dates) {
         DailyRecord record = database.loadOrCreateDailyRecord(
             userId, date, user->getWaterGoalMl()
@@ -253,6 +261,7 @@ PeriodSummary HabitService::periodSummary(
 }
 
 ProfileSummary HabitService::profileSummary(int userId) const {
+    // Lifetime profile statistics need all dates from first activity through today.
     ProfileSummary summary{};
     summary.levelProgress = levelProgressForXp(0);
     auto user = database.getUserById(userId);
@@ -267,6 +276,8 @@ ProfileSummary HabitService::profileSummary(int userId) const {
     std::vector<bool> exerciseGoalMet;
     std::vector<bool> sleepGoalMet;
 
+    // Keep each day's pass/fail state so current and best streaks can be derived
+    // after lifetime XP has been accumulated.
     for (const std::string& date : util::datesBetween(*firstDate, util::today())) {
         DailyRecord record = database.loadOrCreateDailyRecord(
             userId, date, user->getWaterGoalMl()

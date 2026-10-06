@@ -10,6 +10,7 @@
 #include "PageLayout.h"
 
 QWidget* MainWindow::createLoginPage() {
+    // Create the login controls once; signal handlers call attemptLogin later.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Welcome back");
 
@@ -37,6 +38,7 @@ QWidget* MainWindow::createLoginPage() {
 }
 
 QWidget* MainWindow::createSignupPage() {
+    // Signup page construction is separate from validation and account creation.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Create your account");
 
@@ -65,6 +67,7 @@ QWidget* MainWindow::createSignupPage() {
 }
 
 void MainWindow::attemptLogin() {
+    // Validate locally and update session state only after credential checking succeeds.
     const QString username = loginUsername->text().trimmed();
     const QString password = loginPassword->text();
 
@@ -91,6 +94,7 @@ void MainWindow::attemptLogin() {
 }
 
 void MainWindow::attemptSignup() {
+    // Validate all form fields at the UI boundary before inserting a user.
     const QString name = signupName->text().trimmed();
     const QString username = signupUsername->text().trimmed();
     const QString password = signupPassword->text();

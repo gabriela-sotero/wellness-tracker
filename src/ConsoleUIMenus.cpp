@@ -5,6 +5,7 @@
 
 #include "DateUtils.h"
 
+// Share one Database connection with the service and start logged out.
 ConsoleUI::ConsoleUI(Database& database)
     : database(database),
       habitService(database),
@@ -12,11 +13,13 @@ ConsoleUI::ConsoleUI(Database& database)
 }
 
 void ConsoleUI::logOut() {
+    // Clearing the optional session account is enough to return to the public menu.
     currentUser = std::nullopt;
     std::cout << "Logged out.\n";
 }
 
 void ConsoleUI::showHistoryMenu() {
+    // Convert the menu choice into a calendar range, then reuse one summary view.
     std::string option;
     std::cout << "\n--- View progress ---\n";
     std::cout << "1. Daily\n";
@@ -44,6 +47,7 @@ void ConsoleUI::showHistoryMenu() {
 }
 
 bool ConsoleUI::loggedOutMenu() {
+    // Returns false only when input closes or the user chooses to exit.
     std::string option;
 
     std::cout << "\n1. Sign up\n";
@@ -70,6 +74,7 @@ bool ConsoleUI::loggedOutMenu() {
 }
 
 bool ConsoleUI::loggedInMenu() {
+    // Dispatch logged-in menu choices to focused actions on this UI object.
     std::string option;
 
     std::cout << "\n1. Log action\n";
@@ -123,6 +128,7 @@ bool ConsoleUI::loggedInMenu() {
 }
 
 void ConsoleUI::run() {
+    // The active menu follows session state, so login and logout change the flow.
     bool running = true;
 
     while (running) {

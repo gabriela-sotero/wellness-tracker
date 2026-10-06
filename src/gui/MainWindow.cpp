@@ -16,6 +16,8 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
       habitService(database),
       currentUser(std::nullopt),
       pages(new QStackedWidget(this)) {
+    // MainWindow borrows persistence, composes the application service, and owns
+    // each page through Qt's parent-child object model.
     setWindowTitle("Wellness Tracker");
     resize(560, 790);
     setStyleSheet(R"(
@@ -122,10 +124,12 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
 }
 
 void MainWindow::showPage(Page page) {
+    // Centralize stack navigation so page selection stays consistent.
     pages->setCurrentIndex(page);
 }
 
 QWidget* MainWindow::createStartPage() {
+    // Build the public landing screen and connect its buttons to stack navigation.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Wellness Tracker");
 
@@ -151,6 +155,7 @@ QWidget* MainWindow::createStartPage() {
 }
 
 QWidget* MainWindow::createHomePage() {
+    // Build the signed-in menu; actions are wired to their page or session handlers.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Home");
 
@@ -186,6 +191,7 @@ QWidget* MainWindow::createHomePage() {
 }
 
 void MainWindow::logOut() {
+    // Clear session-specific form state before returning to the welcome page.
     currentUser = std::nullopt;
     loginUsername->clear();
     loginPassword->clear();
