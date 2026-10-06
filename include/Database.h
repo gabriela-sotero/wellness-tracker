@@ -8,14 +8,20 @@
 #include "DailyRecord.h"
 #include "Constants.h"
 
+// Encapsulates the SQLite connection and exposes typed persistence operations,
+// keeping SQL details outside the models and user interfaces.
 class Database {
 private:
+    // Resource owned by this instance and closed by its destructor.
     sqlite3* db;
 
 public:
+    // Opens or creates the database at the supplied path.
     Database(const std::string& path);
+    // Closes the SQLite connection owned by this instance.
     ~Database();
 
+    // Creates tables and relationships without replacing existing records.
     void createTables();
 
     // Reads the user's record, restoring water, meal and exercise data, or returns a
@@ -31,6 +37,7 @@ public:
     // water, meal and exercise data into their daily log tables.
     void saveDailyRecord(const DailyRecord& record);
 
+    // Inserts an account and returns its ID, or -1 if insertion fails.
     int insertUser(
         const std::string& username,
         const std::string& name,
@@ -39,6 +46,7 @@ public:
         int waterGoalMl = Constants::DEFAULT_WATER_GOAL_ML
     );
 
+    // Queries convert database rows into User model objects.
     std::optional<User> getUserById(int id);
 
     // Updates the account's optional weight and daily water goal.
@@ -51,11 +59,12 @@ public:
     // before the column existed.
     std::optional<std::string> accountCreatedAt(int userId);
 
+    // Returns no value when the username does not belong to an account.
     std::optional<User> getUserByUsername(
         const std::string& username
     );
 
-    // Returns the user when the password matches the stored hash, else nullopt.
+    // Returns the account only when the supplied password matches its stored hash.
     std::optional<User> authenticate(
         const std::string& username,
         const std::string& password

@@ -9,6 +9,7 @@
 #include "DailyRecord.h"
 #include "HabitService.h"
 
+// Exercises application-service rules against isolated in-memory databases.
 // Logging water through the service accumulates the daily total and scores it.
 static void test_log_water_accumulates_and_scores() {
     Database db(":memory:");

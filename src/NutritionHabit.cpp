@@ -33,11 +33,13 @@ int NutritionHabit::unhealthyMealCount() const {
 }
 
 double NutritionHabit::progress() const {
+    // Only healthy meals advance goal progress; the ratio is capped at 100%.
     double ratio = static_cast<double>(healthyMeals) / mealGoal;
     return std::min(ratio, 1.0);
 }
 
 int NutritionHabit::calculateScore() const {
+    // Apply unhealthy-meal penalties after earning goal progress, with a zero floor.
     int earnedPoints = static_cast<int>(
         std::round(progress() * Constants::NUTRITION_MAX_SCORE)
     );

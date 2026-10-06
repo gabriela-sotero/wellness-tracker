@@ -6,10 +6,12 @@
 #include <string>
 
 int ConsoleUI::currentLevel() const {
+    // Reuse the profile summary as the single source for level calculations.
     return habitService.profileSummary(currentUser->getId()).levelProgress.level;
 }
 
 void ConsoleUI::reportLevelUp(int previousLevel) const {
+    // Called after each logged action to announce only an actual level increase.
     const int newLevel = currentLevel();
     if (newLevel > previousLevel) {
         std::cout << "Level up! You reached level " << newLevel << ".\n";
@@ -18,6 +20,7 @@ void ConsoleUI::reportLevelUp(int previousLevel) const {
 
 // Logs water intake for the logged-in user.
 void ConsoleUI::logWater() {
+    // Parse the full input token so values such as "250ml" are rejected.
     int ml;
 
     while (true) {
@@ -42,6 +45,7 @@ void ConsoleUI::logWater() {
 
 // Logs one meal and records whether it was healthy.
 void ConsoleUI::logMeal() {
+    // Convert the yes/no answer into the domain service's healthy flag.
     auto healthy = askYesNo("Was this a healthy meal?");
     if (!healthy.has_value()) {
         return;
@@ -55,6 +59,7 @@ void ConsoleUI::logMeal() {
 
 // Marks today's exercise as completed.
 void ConsoleUI::logExercise() {
+    // Exercise is a binary habit, so no numeric input is needed.
     const int previousLevel = currentLevel();
     habitService.logExerciseHabit(currentUser->getId());
     std::cout << "Exercise marked as completed.\n";
@@ -63,6 +68,7 @@ void ConsoleUI::logExercise() {
 
 // Logs the number of hours slept today.
 void ConsoleUI::logSleep() {
+    // Reject malformed, non-finite, and non-positive durations before logging.
     double hours = 0.0;
     while (true) {
         std::string input;

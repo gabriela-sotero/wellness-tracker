@@ -6,6 +6,7 @@
 
 #include "ConsoleUI.h"
 
+// Temporarily redirects process-wide console streams and restores them with RAII.
 class ConsoleStreams {
 private:
     std::streambuf* originalInput;
@@ -29,6 +30,7 @@ public:
 };
 
 static std::string runConsoleScenario(const std::string& commands) {
+    // Each scenario gets an isolated in-memory database and captured output.
     Database database(":memory:");
     database.createTables();
     ConsoleUI console(database);
@@ -43,6 +45,7 @@ static std::string runConsoleScenario(const std::string& commands) {
 }
 
 static std::string createAndLogIn() {
+    // Reuse the same signup/login setup in console reporting scenarios.
     return
         "1\n"          // Sign up
         "stats_user\n"

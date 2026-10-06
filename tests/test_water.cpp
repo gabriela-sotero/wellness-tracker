@@ -3,7 +3,7 @@
 #include "WaterHabit.h"
 #include "Constants.h"
 
-// Checks that a new habit starts with no progress or points.
+// Covers WaterHabit initial state, partial progress, and score capping.
 static void test_water_initial_state() {
     WaterHabit w(2000);
 

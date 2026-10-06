@@ -9,6 +9,7 @@
 #include "PageLayout.h"
 
 QWidget* MainWindow::createHabitsPage() {
+    // Construct entry controls and connect Qt signals to focused logging methods.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Log habits");
 
@@ -65,11 +66,13 @@ QWidget* MainWindow::createHabitsPage() {
 
 // Reports what was logged in green, and input problems in red.
 static void report(QLabel* feedback, const QString& message, bool logged) {
+    // A shared presenter keeps success and validation feedback visually consistent.
     feedback->setStyleSheet(logged ? "color: #007c68;" : "");
     feedback->setText(message);
 }
 
 QString MainWindow::levelUpMessage(int previousLevel) const {
+    // Re-read calculated profile level after a save and report only increases.
     const int newLevel = habitService.profileSummary(currentUser->getId())
         .levelProgress.level;
     return newLevel > previousLevel
@@ -78,6 +81,7 @@ QString MainWindow::levelUpMessage(int previousLevel) const {
 }
 
 void MainWindow::logWater() {
+    // Convert text input to a positive integer before delegating to the service.
     bool valid = false;
     const int ml = waterInput->text().trimmed().toInt(&valid);
 
@@ -95,6 +99,7 @@ void MainWindow::logWater() {
 }
 
 void MainWindow::logMeal(bool healthy) {
+    // The button supplies the meal category; HabitService owns recording rules.
     const int previousLevel = habitService.profileSummary(currentUser->getId())
         .levelProgress.level;
     habitService.logMealHabit(currentUser->getId(), healthy);
@@ -107,6 +112,7 @@ void MainWindow::logMeal(bool healthy) {
 }
 
 void MainWindow::logExercise() {
+    // Exercise has no numeric input: the action marks today's binary goal complete.
     const int previousLevel = habitService.profileSummary(currentUser->getId())
         .levelProgress.level;
     habitService.logExerciseHabit(currentUser->getId());
@@ -115,6 +121,7 @@ void MainWindow::logExercise() {
 }
 
 void MainWindow::logSleep() {
+    // Convert and validate the entered duration before recording it.
     bool valid = false;
     const double hours = sleepInput->text().trimmed().toDouble(&valid);
 

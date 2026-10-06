@@ -1,5 +1,6 @@
 #include "DailyRecord.h"
 
+// Construct the day by composing one concrete object for each habit domain.
 DailyRecord::DailyRecord(
     int userId,
     std::string date,
@@ -14,11 +15,13 @@ DailyRecord::DailyRecord(
 }
 
 void DailyRecord::logWater(int ml) {
+    // Keep validation and scoring rules inside WaterHabit.
     water.drankWater(ml);
     return;
 }
 
 void DailyRecord::logMeal(bool healthy) {
+    // The bool chooses which operation of the composed NutritionHabit to call.
     if (healthy) {
         nutrition.logHealthyMeal();
     } else {
@@ -27,6 +30,8 @@ void DailyRecord::logMeal(bool healthy) {
 }
 
 void DailyRecord::seedMeals(int healthyMeals, int unhealthyMeals) {
+    // Rebuild persisted counts through the public model operations so the same
+    // in-memory invariants apply to restored data.
     for (int i = 0; i < healthyMeals; ++i) {
         nutrition.logHealthyMeal();
     }
@@ -40,6 +45,7 @@ void DailyRecord::logExercise() {
 }
 
 void DailyRecord::seedExercise(bool completed) {
+    // Only completed exercise needs an explicit action; false is the default.
     if (completed) {
         exercise.markCompleted();
     }
@@ -54,6 +60,7 @@ void DailyRecord::seedSleep(double hours) {
 }
 
 int DailyRecord::dailyScore() const{
+    // Ask each composed habit to calculate its score, then add the four results.
     return water.calculateScore() + nutrition.calculateScore()
         + exercise.calculateScore() + sleep.calculateScore();
 }

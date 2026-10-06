@@ -7,6 +7,8 @@
 #include <vector>
 
 namespace util {
+    // Header-only helpers keep calendar range construction consistent across
+    // the service, user interfaces, and demo data generator.
     // Formats a calendar date as an ISO string (YYYY-MM-DD).
     inline std::string formatDate(const std::tm& date) {
         char buf[11];                        // "YYYY-MM-DD" + '\0'

@@ -32,6 +32,39 @@ const char* accountDialogStyle = R"(
         border-radius: 6px;
         padding: 6px;
     }
+    QSpinBox {
+        background-color: #ffffff;
+        color: #183b35;
+        border: 1px solid #d5e2dd;
+        border-radius: 6px;
+        padding: 6px;
+        selection-background-color: #007c68;
+        selection-color: #ffffff;
+    }
+    QSpinBox::up-button, QSpinBox::down-button {
+        background-color: #f4f7f5;
+        border: none;
+        border-left: 1px solid #d5e2dd;
+        width: 22px;
+    }
+    QSpinBox::up-button {
+        subcontrol-origin: border;
+        subcontrol-position: top right;
+    }
+    QSpinBox::down-button {
+        subcontrol-origin: border;
+        subcontrol-position: bottom right;
+    }
+    QSpinBox::up-arrow {
+        image: url(assets/icons/arrow-up.svg);
+        width: 10px;
+        height: 10px;
+    }
+    QSpinBox::down-arrow {
+        image: url(assets/icons/arrow-down.svg);
+        width: 10px;
+        height: 10px;
+    }
     QPushButton {
         background-color: #007c68;
         color: #ffffff;
@@ -49,6 +82,7 @@ void showAccountMessage(
     const QString& title,
     const QString& message
 ) {
+    // Centralize dialog styling and execution for account-editing outcomes.
     QMessageBox dialog(icon, title, message, QMessageBox::Ok, parent);
     dialog.setStyleSheet(accountDialogStyle);
     dialog.exec();
@@ -57,6 +91,7 @@ void showAccountMessage(
 
 // Adds a habit row, starting empty until a period is chosen.
 static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
+    // Return widget pointers because later period selections update these controls.
     QWidget* page = layout->parentWidget();
 
     ProgressRow row;
@@ -78,6 +113,7 @@ static void fillProgressRow(
     int totalDays,
     const QString& detail
 ) {
+    // Long-period values show goal frequency; detail text preserves raw totals.
     const int percent = totalDays > 0 ? metDays * 100 / totalDays : 0;
     row.label->setText(
         name + " · " + rateDescription.arg(percent)
@@ -94,6 +130,7 @@ static void fillDailyProgressRow(
     int maximum,
     const QString& detail
 ) {
+    // A one-day view displays measured amounts rather than a percentage of days.
     row.label->setText(label);
     row.bar->setRange(0, maximum > 0 ? maximum : 1);
     row.bar->setValue(std::min(value, maximum));
@@ -102,10 +139,12 @@ static void fillDailyProgressRow(
 
 // Percent of a goal, reported past 100% when the goal is beaten.
 static int percentOf(double value, double goal) {
+    // A zero goal has no meaningful percentage and is reported as zero.
     return goal > 0 ? static_cast<int>(value * 100.0 / goal) : 0;
 }
 
 QWidget* MainWindow::createProgressPage() {
+    // Build the reusable progress controls; period buttons supply data ranges.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Progress", 860);
 
@@ -163,6 +202,7 @@ void MainWindow::showPeriod(
     const std::vector<std::string>& dates,
     bool toDate
 ) {
+    // The service owns aggregation; this method maps its summary into widgets.
     const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
 
     if (summary.days == 0) {
@@ -285,6 +325,7 @@ void MainWindow::showPeriod(
 // Badge artwork ships as SVG under assets/badges, read relative to the working
 // directory like the database is. Qt rasterises the file at the size asked for.
 static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
+    // The highest unlocked tier determines the SVG; zero selects the locked art.
     const QString file = badgeDays > 0
         ? habit + "-" + QString("%1").arg(badgeDays, 3, 10, QChar('0')) + ".svg"
         : QString("locked.svg");
@@ -295,6 +336,7 @@ static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
 }
 
 QWidget* MainWindow::createProfilePage() {
+    // Construct profile widgets once so showProfile can refresh the same controls.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Profile", 860);
 
@@ -318,6 +360,7 @@ QWidget* MainWindow::createProfilePage() {
     waterGoalRow->addWidget(editWaterGoal);
     personalDetails->addLayout(waterGoalRow);
 
+    // Keep the weight row available so a person can add weight later as well.
     profileWeightRow = new QWidget(page);
     auto* weightRow = new QHBoxLayout(profileWeightRow);
     weightRow->setContentsMargins(0, 0, 0, 0);
@@ -330,7 +373,6 @@ QWidget* MainWindow::createProfilePage() {
     editWeightButton->setMinimumWidth(100);
     weightRow->addWidget(editWeightButton);
     personalDetails->addWidget(profileWeightRow);
-    profileWeightRow->hide();
 
     connect(editWaterGoal, &QPushButton::clicked, this, [this] {
         editDailyWaterGoal();
@@ -445,6 +487,7 @@ QWidget* MainWindow::createProfilePage() {
 }
 
 void MainWindow::showProfile() {
+    // Read model and summary values, then render them without recalculating rules.
     const int userId = currentUser->getId();
     const ProfileSummary profile = habitService.profileSummary(userId);
     const auto createdAt = database.accountCreatedAt(userId);
@@ -459,10 +502,11 @@ void MainWindow::showProfile() {
         QString::number(currentUser->getWaterGoalMl()) + " ml/day"
     );
     const auto& weightKg = currentUser->getWeightKg();
-    profileWeightRow->setVisible(weightKg.has_value());
-    if (weightKg.has_value()) {
-        profileWeight->setText(QString::number(weightKg.value(), 'g', 4) + " kg");
-    }
+    profileWeight->setText(
+        weightKg.has_value()
+            ? QString::number(weightKg.value(), 'g', 4) + " kg"
+            : QString("Not provided")
+    );
 
     const LevelProgress level = profile.levelProgress;
     levelProgressLabel->setText(
@@ -505,6 +549,7 @@ void MainWindow::showProfile() {
 }
 
 void MainWindow::editDailyWaterGoal() {
+    // Persist the edited goal while retaining the optional weight unchanged.
     if (!currentUser.has_value()) {
         return;
     }
@@ -538,26 +583,34 @@ void MainWindow::editDailyWaterGoal() {
 }
 
 void MainWindow::editWeight() {
-    if (!currentUser.has_value() || !currentUser->getWeightKg().has_value()) {
+    // Persist an entered weight while retaining the current water goal.
+    if (!currentUser.has_value()) {
         return;
     }
 
     QInputDialog dialog(this);
     dialog.setWindowTitle("Edit weight");
     dialog.setLabelText("Weight in kg:");
-    dialog.setInputMode(QInputDialog::DoubleInput);
-    dialog.setDoubleRange(1.0, 500.0);
-    dialog.setDoubleDecimals(1);
-    dialog.setDoubleStep(0.5);
-    dialog.setDoubleValue(currentUser->getWeightKg().value());
+    dialog.setInputMode(QInputDialog::TextInput);
+    if (currentUser->getWeightKg().has_value()) {
+        dialog.setTextValue(QString::number(currentUser->getWeightKg().value(), 'g', 4));
+    }
     dialog.setStyleSheet(accountDialogStyle);
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }
 
+    bool valid = false;
+    const double weightKg = dialog.textValue().trimmed().toDouble(&valid);
+    if (!valid || weightKg < 1.0 || weightKg > 500.0) {
+        showAccountMessage(this, QMessageBox::Warning, "Edit weight",
+                           "Enter a weight between 1 and 500 kg.");
+        return;
+    }
+
     const int userId = currentUser->getId();
     if (!database.updateUserMetrics(
-            userId, dialog.doubleValue(), currentUser->getWaterGoalMl())) {
+            userId, weightKg, currentUser->getWaterGoalMl())) {
         showAccountMessage(this, QMessageBox::Critical, "Edit weight",
                            "Could not update your weight. Please try again.");
         return;
