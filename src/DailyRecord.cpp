@@ -60,9 +60,13 @@ void DailyRecord::seedSleep(double hours) {
 }
 
 int DailyRecord::dailyScore() const{
-    // Ask each composed habit to calculate its score, then add the four results.
-    return water.calculateScore() + nutrition.calculateScore()
-        + exercise.calculateScore() + sleep.calculateScore();
+    // Through Habit pointers, the vtable picks each habit's own scoring rule.
+    const Habit* habits[] = {&water, &nutrition, &exercise, &sleep};
+    int total = 0;
+    for (const Habit* habit : habits) {
+        total += habit->calculateScore();
+    }
+    return total;
 }
 
 int DailyRecord::nutritionScore() const {
