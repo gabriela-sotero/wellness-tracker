@@ -32,6 +32,39 @@ const char* accountDialogStyle = R"(
         border-radius: 6px;
         padding: 6px;
     }
+    QSpinBox {
+        background-color: #ffffff;
+        color: #183b35;
+        border: 1px solid #d5e2dd;
+        border-radius: 6px;
+        padding: 6px;
+        selection-background-color: #007c68;
+        selection-color: #ffffff;
+    }
+    QSpinBox::up-button, QSpinBox::down-button {
+        background-color: #f4f7f5;
+        border: none;
+        border-left: 1px solid #d5e2dd;
+        width: 22px;
+    }
+    QSpinBox::up-button {
+        subcontrol-origin: border;
+        subcontrol-position: top right;
+    }
+    QSpinBox::down-button {
+        subcontrol-origin: border;
+        subcontrol-position: bottom right;
+    }
+    QSpinBox::up-arrow {
+        image: url(assets/icons/arrow-up.svg);
+        width: 10px;
+        height: 10px;
+    }
+    QSpinBox::down-arrow {
+        image: url(assets/icons/arrow-down.svg);
+        width: 10px;
+        height: 10px;
+    }
     QPushButton {
         background-color: #007c68;
         color: #ffffff;
@@ -330,7 +363,6 @@ QWidget* MainWindow::createProfilePage() {
     editWeightButton->setMinimumWidth(100);
     weightRow->addWidget(editWeightButton);
     personalDetails->addWidget(profileWeightRow);
-    profileWeightRow->hide();
 
     connect(editWaterGoal, &QPushButton::clicked, this, [this] {
         editDailyWaterGoal();
@@ -459,10 +491,11 @@ void MainWindow::showProfile() {
         QString::number(currentUser->getWaterGoalMl()) + " ml/day"
     );
     const auto& weightKg = currentUser->getWeightKg();
-    profileWeightRow->setVisible(weightKg.has_value());
-    if (weightKg.has_value()) {
-        profileWeight->setText(QString::number(weightKg.value(), 'g', 4) + " kg");
-    }
+    profileWeight->setText(
+        weightKg.has_value()
+            ? QString::number(weightKg.value(), 'g', 4) + " kg"
+            : QString("Not provided")
+    );
 
     const LevelProgress level = profile.levelProgress;
     levelProgressLabel->setText(
@@ -538,26 +571,33 @@ void MainWindow::editDailyWaterGoal() {
 }
 
 void MainWindow::editWeight() {
-    if (!currentUser.has_value() || !currentUser->getWeightKg().has_value()) {
+    if (!currentUser.has_value()) {
         return;
     }
 
     QInputDialog dialog(this);
     dialog.setWindowTitle("Edit weight");
     dialog.setLabelText("Weight in kg:");
-    dialog.setInputMode(QInputDialog::DoubleInput);
-    dialog.setDoubleRange(1.0, 500.0);
-    dialog.setDoubleDecimals(1);
-    dialog.setDoubleStep(0.5);
-    dialog.setDoubleValue(currentUser->getWeightKg().value());
+    dialog.setInputMode(QInputDialog::TextInput);
+    if (currentUser->getWeightKg().has_value()) {
+        dialog.setTextValue(QString::number(currentUser->getWeightKg().value(), 'g', 4));
+    }
     dialog.setStyleSheet(accountDialogStyle);
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }
 
+    bool valid = false;
+    const double weightKg = dialog.textValue().trimmed().toDouble(&valid);
+    if (!valid || weightKg < 1.0 || weightKg > 500.0) {
+        showAccountMessage(this, QMessageBox::Warning, "Edit weight",
+                           "Enter a weight between 1 and 500 kg.");
+        return;
+    }
+
     const int userId = currentUser->getId();
     if (!database.updateUserMetrics(
-            userId, dialog.doubleValue(), currentUser->getWaterGoalMl())) {
+            userId, weightKg, currentUser->getWaterGoalMl())) {
         showAccountMessage(this, QMessageBox::Critical, "Edit weight",
                            "Could not update your weight. Please try again.");
         return;
