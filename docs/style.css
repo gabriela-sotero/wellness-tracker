@@ -12,7 +12,7 @@ html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
 a { color: inherit; }
 a:focus-visible { outline: 3px solid #d6a94e; outline-offset: 4px; }
-.hero { min-height: 590px; overflow: hidden; position: relative; background: #123d35; color: #fff; }
+.hero { min-height: 590px; overflow: hidden; position: relative; background: #007c68; color: #fff; }
 .nav { align-items: center; display: flex; justify-content: space-between; margin: auto; max-width: 1180px; padding: 24px 34px; position: relative; z-index: 1; }
 .brand { align-items: center; color: inherit; display: inline-flex; font-family: var(--serif); font-size: 15px; font-weight: 750; gap: 10px; text-decoration: none; }
 .brand-icon { align-items: center; background: #d6e9df; border-radius: 9px 9px 9px 2px; color: #154b40; display: inline-flex; font-size: 14px; height: 31px; justify-content: center; width: 31px; }
@@ -65,7 +65,7 @@ h1, h2, h3, p { overflow-wrap: anywhere; }
 .link-list strong { font-family: var(--serif); font-size: 14px; }
 .link-list small { color: var(--muted); font-size: 12px; }
 .link-list b { color: var(--green); font-size: 18px; }
-.team-band { align-items: center; background: #173f37; color: white; display: flex; gap: 70px; justify-content: center; padding: 52px 34px; }
+.team-band { align-items: center; background: #007c68; color: white; display: flex; gap: 70px; justify-content: center; padding: 52px 34px; }
 .team-band h2 { font-size: 27px; margin: 0; }
 .team-list { border-left: 1px solid rgba(255,255,255,.2); list-style: none; margin: 0; padding: 0 0 0 34px; }
 .team-list li { align-items: center; display: flex; gap: 13px; }
