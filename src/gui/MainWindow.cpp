@@ -41,7 +41,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
         }
         QWidget#card {
             background-color: #FFFFFF;
-            border: 1px solid #d5e2dd;
+            border: 2px solid #9fb7af;
             border-radius: 9px;
         }
         QLabel#cardTitle {
@@ -72,7 +72,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
         QLineEdit {
             min-height: 34px;
             padding: 0 12px;
-            border: 1px solid #d5e2dd;
+            border: 2px solid #9fb7af;
             border-radius: 9px;
             background-color: white;
             color: #183b35;
@@ -133,7 +133,7 @@ QWidget* MainWindow::createStartPage() {
     subtitle->setObjectName("subtitle");
     subtitle->setWordWrap(true);
     layout->addWidget(subtitle);
-    layout->addStretch();
+    layout->addSpacing(24);
 
     auto* login = new QPushButton("Log in", page);
     auto* signup = new QPushButton("Create an account", page);
@@ -157,7 +157,7 @@ QWidget* MainWindow::createHomePage() {
     homeGreeting = new QLabel(page);
     homeGreeting->setWordWrap(true);
     layout->addWidget(homeGreeting);
-    layout->addStretch();
+    layout->addSpacing(24);
 
     auto* habits = new QPushButton("Log habits", page);
     auto* progress = new QPushButton("View progress", page);

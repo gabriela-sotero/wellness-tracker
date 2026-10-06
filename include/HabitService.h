@@ -35,18 +35,22 @@ struct PeriodSummary {
     std::string firstDate;
     std::string lastDate;
     int days;
+    int waterGoalDays;
     int consumedWaterMl;
     int waterGoalMl;        // Goal for the whole period, not for one day.
+    int healthyMealsGoalDays;
     int waterPoints;
     int healthyMeals;
     int unhealthyMeals;
     int nutritionPoints;
     int exerciseDays;
     int exercisePoints;
+    int sleepGoalDays;
     double sleepHours;
     double sleepGoalHours;  // Goal for the whole period, not for one day.
     int sleepPoints;
     int totalPoints;
+    int overallGoalsMet;
 };
 
 // Lifetime XP, the goal streaks running up to today, and the longest ones

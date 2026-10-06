@@ -224,16 +224,29 @@ PeriodSummary HabitService::periodSummary(
         DailyRecord record = database.loadOrCreateDailyRecord(
             userId, date, user->getWaterGoalMl()
         );
+        const bool waterGoalMet =
+            record.consumedWaterMl() >= user->getWaterGoalMl();
+        const bool mealsGoalMet =
+            record.healthyMealCount() >= Constants::HEALTHY_MEALS_GOAL;
+        const bool exerciseGoalMet = record.exerciseCompleted();
+        const bool sleepGoalMet =
+            record.sleptHours() >= Constants::DEFAULT_SLEEP_GOAL_HOURS;
+
         summary.consumedWaterMl += record.consumedWaterMl();
+        summary.waterGoalDays += waterGoalMet ? 1 : 0;
         summary.waterPoints += record.waterScore();
         summary.healthyMeals += record.healthyMealCount();
+        summary.healthyMealsGoalDays += mealsGoalMet ? 1 : 0;
         summary.unhealthyMeals += record.unhealthyMealCount();
         summary.nutritionPoints += record.nutritionScore();
-        summary.exerciseDays += record.exerciseCompleted() ? 1 : 0;
+        summary.exerciseDays += exerciseGoalMet ? 1 : 0;
         summary.exercisePoints += record.exerciseScore();
+        summary.sleepGoalDays += sleepGoalMet ? 1 : 0;
         summary.sleepHours += record.sleptHours();
         summary.sleepPoints += record.sleepScore();
         summary.totalPoints += record.dailyScore();
+        summary.overallGoalsMet += waterGoalMet + mealsGoalMet
+            + exerciseGoalMet + sleepGoalMet;
     }
 
     return summary;

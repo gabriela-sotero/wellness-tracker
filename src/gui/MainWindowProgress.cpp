@@ -12,6 +12,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <algorithm>
+
 #include "Constants.h"
 #include "DateUtils.h"
 #include "PageLayout.h"
@@ -71,15 +73,31 @@ static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
 static void fillProgressRow(
     const ProgressRow& row,
     const QString& name,
-    int points,
+    const QString& rateDescription,
+    int metDays,
+    int totalDays,
+    const QString& detail
+) {
+    const int percent = totalDays > 0 ? metDays * 100 / totalDays : 0;
+    row.label->setText(
+        name + " · " + rateDescription.arg(percent)
+    );
+    row.bar->setRange(0, totalDays > 0 ? totalDays : 1);
+    row.bar->setValue(metDays);
+    row.bar->setFormat(detail);
+}
+
+static void fillDailyProgressRow(
+    const ProgressRow& row,
+    const QString& label,
     int value,
     int maximum,
-    const QString& text
+    const QString& detail
 ) {
-    row.label->setText(name + " - " + QString::number(points) + " XP");
-    row.bar->setMaximum(maximum > 0 ? maximum : 1);
-    row.bar->setValue(value < maximum ? value : maximum);
-    row.bar->setFormat(text);
+    row.label->setText(label);
+    row.bar->setRange(0, maximum > 0 ? maximum : 1);
+    row.bar->setValue(std::min(value, maximum));
+    row.bar->setFormat(detail);
 }
 
 // Percent of a goal, reported past 100% when the goal is beaten.
@@ -89,7 +107,7 @@ static int percentOf(double value, double goal) {
 
 QWidget* MainWindow::createProgressPage() {
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Progress");
+    auto* layout = startPage(page, "Progress", 860);
 
     auto* daily = new QPushButton("Today", page);
     auto* weekly = new QPushButton("Weekly", page);
@@ -104,6 +122,13 @@ QWidget* MainWindow::createProgressPage() {
     progressHeading->setWordWrap(true);
     layout->addWidget(progressHeading);
 
+    progressOverall = new QLabel(page);
+    progressOverall->setObjectName("value");
+    layout->addWidget(progressOverall);
+    progressOverallBar = new QProgressBar(page);
+    progressOverallBar->setFormat("%v of %m daily goals met");
+    layout->addWidget(progressOverallBar);
+
     waterRow = addProgressRow(layout, "Water");
     mealsRow = addProgressRow(layout, "Meals");
     exerciseRow = addProgressRow(layout, "Exercise");
@@ -111,7 +136,6 @@ QWidget* MainWindow::createProgressPage() {
 
     progressTotal = new QLabel(page);
     layout->addWidget(progressTotal);
-    layout->addStretch();
 
     auto* back = new QPushButton("Back", page);
     layout->addWidget(back);
@@ -162,48 +186,99 @@ void MainWindow::showPeriod(
         );
     }
 
-    const int waterPercent = percentOf(summary.consumedWaterMl, summary.waterGoalMl);
+    if (summary.days == 1) {
+        progressOverall->setText(
+            "Goals completed today · " + QString::number(summary.overallGoalsMet) + " / 4"
+        );
+        progressOverallBar->setRange(0, 4);
+        progressOverallBar->setValue(summary.overallGoalsMet);
+
+        fillDailyProgressRow(
+            waterRow,
+            "Water · " + QString::number(summary.consumedWaterMl) + " / "
+                + QString::number(summary.waterGoalMl) + " ml",
+            summary.consumedWaterMl,
+            summary.waterGoalMl,
+            QString::number(summary.consumedWaterMl) + " ml recorded"
+        );
+        fillDailyProgressRow(
+            mealsRow,
+            "Meals · " + QString::number(summary.healthyMeals) + " healthy, "
+                + QString::number(summary.unhealthyMeals) + " unhealthy",
+            summary.healthyMeals,
+            Constants::HEALTHY_MEALS_GOAL,
+            QString::number(summary.healthyMeals) + " / "
+                + QString::number(Constants::HEALTHY_MEALS_GOAL) + " healthy meals"
+        );
+        fillDailyProgressRow(
+            exerciseRow,
+            summary.exerciseDays > 0 ? "Exercise · Completed" : "Exercise · Not completed",
+            summary.exerciseDays,
+            1,
+            summary.exerciseDays > 0 ? "Completed today" : "Not completed today"
+        );
+        fillDailyProgressRow(
+            sleepRow,
+            "Sleep · " + QString::number(summary.sleepHours, 'f', 1) + " / "
+                + QString::number(summary.sleepGoalHours, 'f', 1) + " h",
+            static_cast<int>(summary.sleepHours * 10),
+            static_cast<int>(summary.sleepGoalHours * 10),
+            QString::number(summary.sleepHours, 'f', 1) + " hours recorded"
+        );
+        progressTotal->setText("Points earned today: " + QString::number(summary.totalPoints));
+        showPage(ProgressPage);
+        return;
+    }
+
+    const int goalOpportunities = summary.days * 4;
+    const int overallPercent = percentOf(summary.overallGoalsMet, goalOpportunities);
+    progressOverall->setText(
+        "Overall habit consistency · " + QString::number(overallPercent) + "%"
+    );
+    progressOverallBar->setRange(0, goalOpportunities > 0 ? goalOpportunities : 1);
+    progressOverallBar->setValue(summary.overallGoalsMet);
+
+    const double averageWater =
+        static_cast<double>(summary.consumedWaterMl) / summary.days;
     fillProgressRow(
-        waterRow, "Water", summary.waterPoints,
-        summary.consumedWaterMl, summary.waterGoalMl,
-        QString::number(summary.consumedWaterMl) + " / "
-            + QString::number(summary.waterGoalMl) + " ml ("
-            + QString::number(waterPercent) + "%)"
+        waterRow, "Water", "%1% of days at goal",
+        summary.waterGoalDays, summary.days,
+        QString::number(summary.waterGoalDays) + " of "
+            + QString::number(summary.days) + " days · average "
+            + QString::number(averageWater, 'f', 0) + " ml/day"
     );
 
-    const int mealsGoal = Constants::HEALTHY_MEALS_GOAL * summary.days;
-    const int mealsPercent = percentOf(summary.healthyMeals, mealsGoal);
+    const double averageHealthyMeals =
+        static_cast<double>(summary.healthyMeals) / summary.days;
     fillProgressRow(
-        mealsRow, "Meals", summary.nutritionPoints,
-        summary.healthyMeals, mealsGoal,
-        QString::number(summary.healthyMeals) + " / " + QString::number(mealsGoal)
-            + " healthy, " + QString::number(summary.unhealthyMeals)
-            + " unhealthy (" + QString::number(mealsPercent) + "%)"
+        mealsRow, "Meals", "%1% of days at goal",
+        summary.healthyMealsGoalDays, summary.days,
+        QString::number(summary.healthyMealsGoalDays) + " of "
+            + QString::number(summary.days) + " days at goal · average "
+            + QString::number(averageHealthyMeals, 'f', 1) + " healthy/day"
     );
 
-    const int exercisePercent = percentOf(summary.exerciseDays, summary.days);
     fillProgressRow(
-        exerciseRow, "Exercise", summary.exercisePoints,
+        exerciseRow, "Exercise", "%1% of days completed",
         summary.exerciseDays, summary.days,
-        summary.days == 1
-            ? QString(summary.exerciseDays > 0 ? "Completed" : "Not completed")
-            : QString::number(summary.exerciseDays) + " / "
-                  + QString::number(summary.days) + " days ("
-                  + QString::number(exercisePercent) + "%)"
+        QString::number(summary.exerciseDays) + " of "
+            + QString::number(summary.days) + " days completed"
     );
 
-    // Tenths of an hour keep the bar accurate, since its value is an integer.
-    const int sleepPercent = percentOf(summary.sleepHours, summary.sleepGoalHours);
+    const double averageSleep = summary.sleepHours / summary.days;
     fillProgressRow(
-        sleepRow, "Sleep", summary.sleepPoints,
-        static_cast<int>(summary.sleepHours * 10),
-        static_cast<int>(summary.sleepGoalHours * 10),
-        QString::number(summary.sleepHours, 'f', 1) + " / "
-            + QString::number(summary.sleepGoalHours, 'f', 1) + " hours ("
-            + QString::number(sleepPercent) + "%)"
+        sleepRow, "Sleep", "%1% of nights at 8h goal",
+        summary.sleepGoalDays, summary.days,
+        QString::number(summary.sleepGoalDays) + " of "
+            + QString::number(summary.days) + " nights · average across period "
+            + QString::number(averageSleep, 'f', 1) + " h/night"
     );
 
-    progressTotal->setText("Total XP: " + QString::number(summary.totalPoints));
+    progressTotal->setText(
+        "Average daily score: "
+            + QString::number(static_cast<double>(summary.totalPoints) / summary.days, 'f', 0)
+            + " XP"
+    );
     showPage(ProgressPage);
 }
 
@@ -221,7 +296,7 @@ static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
 
 QWidget* MainWindow::createProfilePage() {
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Profile");
+    auto* layout = startPage(page, "Profile", 860);
 
     auto* account = addCard(layout, QString());
     profileName = new QLabel(page);
@@ -231,7 +306,40 @@ QWidget* MainWindow::createProfilePage() {
     account->addWidget(profileName);
     account->addWidget(profileMemberSince);
 
-    auto* levelCard = addCard(layout, "Level");
+    auto* personalDetails = addCard(layout, "Personal details");
+    auto* waterGoalRow = new QHBoxLayout;
+    waterGoalRow->addWidget(new QLabel("Daily water goal", page));
+    waterGoalRow->addStretch();
+    profileWaterGoal = new QLabel(page);
+    profileWaterGoal->setObjectName("value");
+    waterGoalRow->addWidget(profileWaterGoal);
+    auto* editWaterGoal = new QPushButton("Edit", page);
+    editWaterGoal->setMinimumWidth(100);
+    waterGoalRow->addWidget(editWaterGoal);
+    personalDetails->addLayout(waterGoalRow);
+
+    profileWeightRow = new QWidget(page);
+    auto* weightRow = new QHBoxLayout(profileWeightRow);
+    weightRow->setContentsMargins(0, 0, 0, 0);
+    weightRow->addWidget(new QLabel("Weight", profileWeightRow));
+    weightRow->addStretch();
+    profileWeight = new QLabel(profileWeightRow);
+    profileWeight->setObjectName("value");
+    weightRow->addWidget(profileWeight);
+    auto* editWeightButton = new QPushButton("Edit", profileWeightRow);
+    editWeightButton->setMinimumWidth(100);
+    weightRow->addWidget(editWeightButton);
+    personalDetails->addWidget(profileWeightRow);
+    profileWeightRow->hide();
+
+    connect(editWaterGoal, &QPushButton::clicked, this, [this] {
+        editDailyWaterGoal();
+    });
+    connect(editWeightButton, &QPushButton::clicked, this, [this] {
+        editWeight();
+    });
+
+    auto* levelCard = addCard(layout, QString());
     levelProgressLabel = new QLabel(page);
     levelProgressLabel->setObjectName("value");
     levelProgressBar = new QProgressBar(page);
@@ -278,7 +386,6 @@ QWidget* MainWindow::createProfilePage() {
         streakValues.push_back(addCardRow(streaks, goal));
     }
 
-    layout->addStretch();
     auto* back = new QPushButton("Back", page);
     auto* deleteAccount = new QPushButton("Delete account", page);
     deleteAccount->setStyleSheet("color: #a32121;");
@@ -348,6 +455,14 @@ void MainWindow::showProfile() {
             ? "Member since " + QString::fromStdString(*createdAt)
             : QString("Created before the app recorded a date")
     );
+    profileWaterGoal->setText(
+        QString::number(currentUser->getWaterGoalMl()) + " ml/day"
+    );
+    const auto& weightKg = currentUser->getWeightKg();
+    profileWeightRow->setVisible(weightKg.has_value());
+    if (weightKg.has_value()) {
+        profileWeight->setText(QString::number(weightKg.value(), 'g', 4) + " kg");
+    }
 
     const LevelProgress level = profile.levelProgress;
     levelProgressLabel->setText(
@@ -387,4 +502,71 @@ void MainWindow::showProfile() {
     streakValues[3]->setText(QString::number(profile.sleepStreak) + " days");
 
     showPage(ProfilePage);
+}
+
+void MainWindow::editDailyWaterGoal() {
+    if (!currentUser.has_value()) {
+        return;
+    }
+
+    QInputDialog dialog(this);
+    dialog.setWindowTitle("Daily water goal");
+    dialog.setLabelText("Daily water goal in ml:");
+    dialog.setInputMode(QInputDialog::IntInput);
+    dialog.setIntRange(1, 100000);
+    dialog.setIntStep(250);
+    dialog.setIntValue(currentUser->getWaterGoalMl());
+    dialog.setStyleSheet(accountDialogStyle);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    const int userId = currentUser->getId();
+    if (!database.updateUserMetrics(
+            userId, currentUser->getWeightKg(), dialog.intValue())) {
+        showAccountMessage(this, QMessageBox::Critical, "Daily water goal",
+                           "Could not update your daily water goal. Please try again.");
+        return;
+    }
+    currentUser = database.getUserById(userId);
+    if (!currentUser.has_value()) {
+        showAccountMessage(this, QMessageBox::Critical, "Daily water goal",
+                           "Could not reload your profile. Please sign in again.");
+        return;
+    }
+    showProfile();
+}
+
+void MainWindow::editWeight() {
+    if (!currentUser.has_value() || !currentUser->getWeightKg().has_value()) {
+        return;
+    }
+
+    QInputDialog dialog(this);
+    dialog.setWindowTitle("Edit weight");
+    dialog.setLabelText("Weight in kg:");
+    dialog.setInputMode(QInputDialog::DoubleInput);
+    dialog.setDoubleRange(1.0, 500.0);
+    dialog.setDoubleDecimals(1);
+    dialog.setDoubleStep(0.5);
+    dialog.setDoubleValue(currentUser->getWeightKg().value());
+    dialog.setStyleSheet(accountDialogStyle);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    const int userId = currentUser->getId();
+    if (!database.updateUserMetrics(
+            userId, dialog.doubleValue(), currentUser->getWaterGoalMl())) {
+        showAccountMessage(this, QMessageBox::Critical, "Edit weight",
+                           "Could not update your weight. Please try again.");
+        return;
+    }
+    currentUser = database.getUserById(userId);
+    if (!currentUser.has_value()) {
+        showAccountMessage(this, QMessageBox::Critical, "Edit weight",
+                           "Could not reload your profile. Please sign in again.");
+        return;
+    }
+    showProfile();
 }

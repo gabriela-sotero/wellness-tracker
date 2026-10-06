@@ -313,6 +313,38 @@ std::optional<User> Database::getUserById(int id) {
     return User(userId, username, name, waterGoalMl);
 }
 
+bool Database::updateUserMetrics(
+    int userId,
+    std::optional<double> weightKg,
+    int waterGoalMl
+) {
+    if (userId <= 0 || waterGoalMl <= 0
+        || (weightKg.has_value() && weightKg.value() <= 0.0)) {
+        return false;
+    }
+
+    const char* sql = "UPDATE users SET weight_kg = ?, water_goal_ml = ? WHERE id = ?;";
+    sqlite3_stmt* statement = nullptr;
+    if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
+        std::cerr << "Failed to prepare user metrics update: "
+                  << sqlite3_errmsg(db) << '\n';
+        return false;
+    }
+
+    if (weightKg.has_value()) {
+        sqlite3_bind_double(statement, 1, weightKg.value());
+    } else {
+        sqlite3_bind_null(statement, 1);
+    }
+    sqlite3_bind_int(statement, 2, waterGoalMl);
+    sqlite3_bind_int(statement, 3, userId);
+
+    const bool success = sqlite3_step(statement) == SQLITE_DONE
+        && sqlite3_changes(db) == 1;
+    sqlite3_finalize(statement);
+    return success;
+}
+
 std::optional<std::string> Database::accountCreatedAt(int userId) {
     const char* sql = "SELECT created_at FROM users WHERE id = ?;";
     sqlite3_stmt* statement = nullptr;
