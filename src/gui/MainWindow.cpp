@@ -41,7 +41,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
         }
         QWidget#card {
             background-color: #FFFFFF;
-            border: 1px solid #d5e2dd;
+            border: 2px solid #9fb7af;
             border-radius: 9px;
         }
         QLabel#cardTitle {

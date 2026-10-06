@@ -339,7 +339,7 @@ QWidget* MainWindow::createProfilePage() {
         editWeight();
     });
 
-    auto* levelCard = addCard(layout, "Level");
+    auto* levelCard = addCard(layout, QString());
     levelProgressLabel = new QLabel(page);
     levelProgressLabel->setObjectName("value");
     levelProgressBar = new QProgressBar(page);
