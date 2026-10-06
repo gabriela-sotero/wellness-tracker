@@ -306,6 +306,39 @@ QWidget* MainWindow::createProfilePage() {
     account->addWidget(profileName);
     account->addWidget(profileMemberSince);
 
+    auto* personalDetails = addCard(layout, "Personal details");
+    auto* waterGoalRow = new QHBoxLayout;
+    waterGoalRow->addWidget(new QLabel("Daily water goal", page));
+    waterGoalRow->addStretch();
+    profileWaterGoal = new QLabel(page);
+    profileWaterGoal->setObjectName("value");
+    waterGoalRow->addWidget(profileWaterGoal);
+    auto* editWaterGoal = new QPushButton("Edit", page);
+    editWaterGoal->setMinimumWidth(100);
+    waterGoalRow->addWidget(editWaterGoal);
+    personalDetails->addLayout(waterGoalRow);
+
+    profileWeightRow = new QWidget(page);
+    auto* weightRow = new QHBoxLayout(profileWeightRow);
+    weightRow->setContentsMargins(0, 0, 0, 0);
+    weightRow->addWidget(new QLabel("Weight", profileWeightRow));
+    weightRow->addStretch();
+    profileWeight = new QLabel(profileWeightRow);
+    profileWeight->setObjectName("value");
+    weightRow->addWidget(profileWeight);
+    auto* editWeightButton = new QPushButton("Edit", profileWeightRow);
+    editWeightButton->setMinimumWidth(100);
+    weightRow->addWidget(editWeightButton);
+    personalDetails->addWidget(profileWeightRow);
+    profileWeightRow->hide();
+
+    connect(editWaterGoal, &QPushButton::clicked, this, [this] {
+        editDailyWaterGoal();
+    });
+    connect(editWeightButton, &QPushButton::clicked, this, [this] {
+        editWeight();
+    });
+
     auto* levelCard = addCard(layout, "Level");
     levelProgressLabel = new QLabel(page);
     levelProgressLabel->setObjectName("value");
@@ -422,6 +455,14 @@ void MainWindow::showProfile() {
             ? "Member since " + QString::fromStdString(*createdAt)
             : QString("Created before the app recorded a date")
     );
+    profileWaterGoal->setText(
+        QString::number(currentUser->getWaterGoalMl()) + " ml/day"
+    );
+    const auto& weightKg = currentUser->getWeightKg();
+    profileWeightRow->setVisible(weightKg.has_value());
+    if (weightKg.has_value()) {
+        profileWeight->setText(QString::number(weightKg.value(), 'g', 4) + " kg");
+    }
 
     const LevelProgress level = profile.levelProgress;
     levelProgressLabel->setText(
@@ -461,4 +502,71 @@ void MainWindow::showProfile() {
     streakValues[3]->setText(QString::number(profile.sleepStreak) + " days");
 
     showPage(ProfilePage);
+}
+
+void MainWindow::editDailyWaterGoal() {
+    if (!currentUser.has_value()) {
+        return;
+    }
+
+    QInputDialog dialog(this);
+    dialog.setWindowTitle("Daily water goal");
+    dialog.setLabelText("Daily water goal in ml:");
+    dialog.setInputMode(QInputDialog::IntInput);
+    dialog.setIntRange(1, 100000);
+    dialog.setIntStep(250);
+    dialog.setIntValue(currentUser->getWaterGoalMl());
+    dialog.setStyleSheet(accountDialogStyle);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    const int userId = currentUser->getId();
+    if (!database.updateUserMetrics(
+            userId, currentUser->getWeightKg(), dialog.intValue())) {
+        showAccountMessage(this, QMessageBox::Critical, "Daily water goal",
+                           "Could not update your daily water goal. Please try again.");
+        return;
+    }
+    currentUser = database.getUserById(userId);
+    if (!currentUser.has_value()) {
+        showAccountMessage(this, QMessageBox::Critical, "Daily water goal",
+                           "Could not reload your profile. Please sign in again.");
+        return;
+    }
+    showProfile();
+}
+
+void MainWindow::editWeight() {
+    if (!currentUser.has_value() || !currentUser->getWeightKg().has_value()) {
+        return;
+    }
+
+    QInputDialog dialog(this);
+    dialog.setWindowTitle("Edit weight");
+    dialog.setLabelText("Weight in kg:");
+    dialog.setInputMode(QInputDialog::DoubleInput);
+    dialog.setDoubleRange(1.0, 500.0);
+    dialog.setDoubleDecimals(1);
+    dialog.setDoubleStep(0.5);
+    dialog.setDoubleValue(currentUser->getWeightKg().value());
+    dialog.setStyleSheet(accountDialogStyle);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    const int userId = currentUser->getId();
+    if (!database.updateUserMetrics(
+            userId, dialog.doubleValue(), currentUser->getWaterGoalMl())) {
+        showAccountMessage(this, QMessageBox::Critical, "Edit weight",
+                           "Could not update your weight. Please try again.");
+        return;
+    }
+    currentUser = database.getUserById(userId);
+    if (!currentUser.has_value()) {
+        showAccountMessage(this, QMessageBox::Critical, "Edit weight",
+                           "Could not reload your profile. Please sign in again.");
+        return;
+    }
+    showProfile();
 }

@@ -85,9 +85,7 @@ void MainWindow::attemptLogin() {
     currentUser = user;
     loginFeedback->clear();
     homeGreeting->setText(
-        QString("Welcome, %1! Your daily water goal is %2 ml.")
-            .arg(QString::fromStdString(user->getName()))
-            .arg(user->getWaterGoalMl())
+        QString("Welcome, %1!").arg(QString::fromStdString(user->getName()))
     );
     showPage(HomePage);
 }

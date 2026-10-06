@@ -63,6 +63,9 @@ private:
 
     QLabel* profileName = nullptr;
     QLabel* profileMemberSince = nullptr;
+    QLabel* profileWaterGoal = nullptr;
+    QLabel* profileWeight = nullptr;
+    QWidget* profileWeightRow = nullptr;
     QLabel* levelProgressLabel = nullptr;
     QProgressBar* levelProgressBar = nullptr;
     std::vector<QLabel*> badgeImages;
@@ -106,6 +109,8 @@ private:
         bool toDate = false
     );
     void showProfile();
+    void editDailyWaterGoal();
+    void editWeight();
     void logOut();
 
 public:

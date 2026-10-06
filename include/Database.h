@@ -41,6 +41,9 @@ public:
 
     std::optional<User> getUserById(int id);
 
+    // Updates the account's optional weight and daily water goal.
+    bool updateUserMetrics(int userId, std::optional<double> weightKg, int waterGoalMl);
+
     // Returns the first day with tracked activity for this account.
     std::optional<std::string> firstDailyRecordDate(int userId);
 
