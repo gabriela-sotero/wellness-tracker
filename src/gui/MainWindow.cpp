@@ -36,9 +36,6 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
     // Palette: primary #007c68 with its pressed "edge" #005c4d, soft tints for
     // active states, gold and orange only for streak and XP accents.
     setStyleSheet(R"qss(
-        * {
-            font-family: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-        }
         QMainWindow, QWidget#page {
             background-color: #ffffff;
         }
@@ -280,6 +277,13 @@ void MainWindow::showPage(Page page) {
     if (page == HomePage) {
         refreshHome();
     }
+    if (page == HabitsPage) {
+        for (QuestCard* quest : {&waterQuest, &mealQuest, &exerciseQuest, &sleepQuest}) {
+            quest->feedback->clear();
+            quest->feedback->hide();
+        }
+        refreshHabits();
+    }
 }
 
 QWidget* MainWindow::createNavBar() {
@@ -314,7 +318,6 @@ QWidget* MainWindow::createNavBar() {
         showPage(HomePage);
     });
     connect(navButtons[1], &QPushButton::clicked, this, [this] {
-        habitFeedback->clear();
         showPage(HabitsPage);
     });
     connect(navButtons[2], &QPushButton::clicked, this, [this] {
@@ -405,9 +408,12 @@ QWidget* MainWindow::createHomePage() {
     auto* header = new QWidget(page);
     header->setObjectName("topBar");
     header->setAttribute(Qt::WA_StyledBackground, true);
-    auto* headerLayout = new QHBoxLayout(header);
-    headerLayout->setContentsMargins(20, 12, 20, 12);
-    headerLayout->setSpacing(16);
+    auto* headerLayout = new QVBoxLayout(header);
+    headerLayout->setContentsMargins(16, 10, 16, 10);
+    headerLayout->setSpacing(7);
+
+    auto* topRow = new QHBoxLayout;
+    topRow->setSpacing(8);
 
     auto* who = new QVBoxLayout;
     who->setSpacing(0);
@@ -418,26 +424,51 @@ QWidget* MainWindow::createHomePage() {
     homeLevel->setObjectName("muted");
     who->addWidget(homeGreeting);
     who->addWidget(homeLevel);
-    headerLayout->addLayout(who, 1);
+    topRow->addLayout(who, 1);
 
-    // Icon plus number, used for the streak and XP counters.
-    auto addChip = [&](const char* icon, const QColor& color, const char* valueName) {
+    // XP stays on the greeting row; habit streaks form a compact strip below.
+    auto addChip = [&](QHBoxLayout* chips, const char* icon, const QColor& color,
+                       const char* valueName, const QString& tooltip) {
         auto* chip = new QWidget(header);
-        auto* row = new QHBoxLayout(chip);
-        row->setContentsMargins(0, 0, 0, 0);
-        row->setSpacing(4);
+        chip->setToolTip(tooltip);
+        chip->setAccessibleName(tooltip);
+        auto* chipLayout = new QHBoxLayout(chip);
+        chipLayout->setContentsMargins(0, 0, 0, 0);
+        chipLayout->setSpacing(3);
 
         auto* image = new QLabel(chip);
-        image->setPixmap(icons::svgPixmap(icon, color, 22));
+        image->setPixmap(icons::svgPixmap(icon, color, 18));
+        image->setToolTip(tooltip);
+        image->setAccessibleName(tooltip);
         auto* value = new QLabel("0", chip);
         value->setObjectName(valueName);
-        row->addWidget(image);
-        row->addWidget(value);
-        headerLayout->addWidget(chip);
+        value->setToolTip(tooltip);
+        value->setAccessibleName(tooltip);
+        chipLayout->addWidget(image);
+        chipLayout->addWidget(value);
+        chips->addWidget(chip);
         return value;
     };
-    homeStreak = addChip(icons::flame, QColor("#ff9600"), "streakValue");
-    homeXp = addChip(icons::bolt, QColor("#ffc800"), "xpValue");
+    homeXp = addChip(topRow, icons::bolt, QColor("#ffc800"), "xpValue", "Total XP");
+    headerLayout->addLayout(topRow);
+
+    auto* streakRow = new QHBoxLayout;
+    streakRow->setContentsMargins(0, 0, 0, 0);
+    streakRow->setSpacing(18);
+    const struct { const char* icon; const char* name; QColor color; } streaks[] = {
+        {icons::drop, "Water streak", QColor("#1cb0f6")},
+        {icons::meal, "Healthy meals streak", QColor("#ff9600")},
+        {icons::dumbbell, "Exercise streak", QColor("#ff4b4b")},
+        {icons::moon, "Sleep streak", QColor("#a560f0")}
+    };
+    for (int i = 0; i < 4; ++i) {
+        homeHabitStreaks.push_back(addChip(
+            streakRow, streaks[i].icon, streaks[i].color, "streakValue",
+            QString("%1 · consecutive days").arg(streaks[i].name)
+        ));
+    }
+    streakRow->addStretch();
+    headerLayout->addLayout(streakRow);
     layout->addWidget(header);
 
     homePath = new PathView;
@@ -479,14 +510,16 @@ void MainWindow::refreshHome() {
     const ProfileSummary profile = habitService.profileSummary(userId);
     const PeriodSummary today = habitService.periodSummary(userId, {util::today()});
 
-    const int bestStreak = std::max({
-        static_cast<int>(profile.waterStreak),
-        static_cast<int>(profile.healthyMealsStreak),
-        static_cast<int>(profile.exerciseStreak),
-        static_cast<int>(profile.sleepStreak)
-    });
     homeLevel->setText(QString("Level %1").arg(profile.levelProgress.level));
-    homeStreak->setText(QString::number(bestStreak));
+    const int habitStreaks[] = {
+        profile.waterStreak,
+        profile.healthyMealsStreak,
+        profile.exerciseStreak,
+        profile.sleepStreak
+    };
+    for (std::size_t i = 0; i < homeHabitStreaks.size(); ++i) {
+        homeHabitStreaks[i]->setText(QString::number(habitStreaks[i]));
+    }
     homeXp->setText(QString::number(profile.totalXp));
 
     // History stops at the day the account was created; without a usable date

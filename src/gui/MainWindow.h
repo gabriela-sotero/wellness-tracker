@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QString>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -24,7 +25,17 @@ class QVBoxLayout;
 struct ProgressRow {
     // The label describes the measurement; the bar visualizes its value.
     QLabel* label = nullptr;
+    QLabel* detail = nullptr;
     QProgressBar* bar = nullptr;
+};
+
+struct QuestCard {
+    QWidget* card = nullptr;
+    QVBoxLayout* body = nullptr;
+    QLabel* status = nullptr;
+    QLabel* badge = nullptr;
+    QProgressBar* bar = nullptr;
+    QLabel* feedback = nullptr;
 };
 
 // Main Qt window. QMainWindow supplies the window behavior; pages keeps each
@@ -77,12 +88,18 @@ private:
     // Habit-entry controls feed validated values into HabitService.
     QLineEdit* waterInput = nullptr;
     QLineEdit* sleepInput = nullptr;
-    QLabel* habitFeedback = nullptr;
+    QLabel* questsSummary = nullptr;
+    QProgressBar* questsBar = nullptr;
+    QPushButton* exerciseButton = nullptr;
+    QuestCard waterQuest;
+    QuestCard mealQuest;
+    QuestCard exerciseQuest;
+    QuestCard sleepQuest;
 
     // Home header and day path are refreshed from the services whenever home opens.
     QLabel* homeGreeting = nullptr;
     QLabel* homeLevel = nullptr;
-    QLabel* homeStreak = nullptr;
+    std::vector<QLabel*> homeHabitStreaks;
     QLabel* homeXp = nullptr;
     QScrollArea* homeScroll = nullptr;
     PathView* homePath = nullptr;
@@ -147,11 +164,13 @@ private:
     // Logged-in actions.
     // Record actions delegate business rules to HabitService.
     void logWater();
+    void addWater(int ml);
+    void addSleep(double hours);
     void logMeal(bool healthy);
     void logExercise();
     void logSleep();
-    // Compares the current level with the level captured before a habit action.
-    QString levelUpMessage(int previousLevel) const;
+    void refreshHabits();
+    void logHabit(QuestCard& quest, const QString& message, const std::function<void()>& record);
     // toDate marks a period that is still filling up, like the current month.
     void showPeriod(
         const QString& period,

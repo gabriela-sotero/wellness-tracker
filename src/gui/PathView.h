@@ -396,7 +396,7 @@ private:
 
         const bool done = todayGoals >= 4;
         if (done) {
-            paintDisc(painter, c, QColor("#ffc800"), QColor("#d9a400"));
+            paintDisc(painter, c, QColor("#007c68"), QColor("#005c4d"));
         } else if (hovered == pastDays) {
             paintDisc(painter, c, QColor("#0a8c77"), QColor("#005c4d"));
         } else {

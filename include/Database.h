@@ -58,6 +58,8 @@ public:
     // Returns the day the account was created, absent for accounts made
     // before the column existed.
     std::optional<std::string> accountCreatedAt(int userId);
+    // Updates the account creation date, used by seeded profiles with history.
+    bool updateAccountCreatedAt(int userId, const std::string& date);
 
     // Returns no value when the username does not belong to an account.
     std::optional<User> getUserByUsername(

@@ -30,6 +30,10 @@ inline constexpr const char* check = R"(<path d="m5 12.5 4.5 4.5L19 7.5" fill="n
 inline constexpr const char* flame = R"(<path d="M12 2c.5 3.2 4.5 5.2 4.5 10a4.5 4.5 0 0 1-9 0c0-2 1-3.2 2-4.2.2 1.4.9 2.2 1.7 2.7C11 8 10.5 5 12 2z" fill="currentColor"/>)";
 
 inline constexpr const char* bolt = R"(<path d="M13.5 2 5 13.5h6L9.5 22 19 9.8h-6.2z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>)";
+inline constexpr const char* drop = R"(<path d="M12 3c3 4.2 6 7 6 11a6 6 0 0 1-12 0c0-4 3-6.8 6-11z" fill="currentColor"/>)";
+inline constexpr const char* meal = R"(<path d="M3 11h18a9 9 0 0 1-18 0z" fill="currentColor"/><path d="M8 7.5c0-1.2 1-1.8 1-3M12 7.5c0-1.2 1-1.8 1-3M16 7.5c0-1.2 1-1.8 1-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>)";
+inline constexpr const char* dumbbell = R"(<g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7v10M17 7v10M4 9.5v5M20 9.5v5M7 12h10"/></g>)";
+inline constexpr const char* moon = R"(<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor"/>)";
 
 // Full-color mark for the welcome page (drawn on a 96x100 canvas).
 inline constexpr const char* emblem = R"(<circle cx="48" cy="56" r="40" fill="#005c4d"/><circle cx="48" cy="48" r="40" fill="#007c68"/><path d="M48 22c8 11 17 18 17 29a17 17 0 0 1-34 0c0-11 9-18 17-29z" fill="#ffffff"/><path d="M41 53a7 7 0 0 0 6 7" fill="none" stroke="#007c68" stroke-width="3.2" stroke-linecap="round"/>)";

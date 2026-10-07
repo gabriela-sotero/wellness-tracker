@@ -136,7 +136,7 @@ cmake --build build --target seed_demo_profile
 ./build/seed_demo_profile
 ```
 
-Sign in with username `demo` and password `demo`. The utility adds this account to `data/wellness.db`; if it already exists, it leaves its data unchanged. Run `./build/seed_demo_profile --reset` to replace the demo account and regenerate its sample data.
+Sign in with username `demo` and password `demo`. The utility adds this account to `data/wellness.db`; if it already exists, it aligns its creation date with the start of the one-year path history without changing habit records. Run `./build/seed_demo_profile --reset` to replace the demo account and regenerate its sample data.
 
 ## Tests
 

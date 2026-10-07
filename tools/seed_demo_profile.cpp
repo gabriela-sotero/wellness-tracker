@@ -23,12 +23,18 @@ int main(int argc, char* argv[]) {
 
     constexpr const char* username = "demo";
     constexpr const char* password = "demo";
+    const std::vector<std::string> dates = util::lastDays(366);
 
     const auto existingDemo = database.getUserByUsername(username);
     if (existingDemo.has_value()) {
         if (!resetDemo) {
-            std::cout << "The demo account already exists; no data was changed. "
-                         "Run with --reset to replace its demo data.\n";
+            if (!database.updateAccountCreatedAt(existingDemo->getId(), dates.front())) {
+                std::cerr << "Could not update the demo account creation date.\n";
+                return 1;
+            }
+            std::cout << "The demo account already exists; its creation date now "
+                         "matches the start of its one-year path history. Habit data was unchanged. "
+                         "Run with --reset to regenerate its demo data.\n";
             return 0;
         }
         if (!database.deleteUser(existingDemo->getId())) {
@@ -45,8 +51,12 @@ int main(int argc, char* argv[]) {
         std::cerr << "Could not create the demo account.\n";
         return 1;
     }
+    if (!database.updateAccountCreatedAt(userId, dates.front())) {
+        std::cerr << "Could not set the demo account creation date.\n";
+        database.deleteUser(userId);
+        return 1;
+    }
 
-    const std::vector<std::string> dates = util::lastDays(365);
     // A fixed seed makes generated preview history repeatable across runs.
     std::mt19937 random(20261005);
     std::uniform_real_distribution<double> chance(0.0, 1.0);
