@@ -111,13 +111,13 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
             font-weight: 700;
         }
         QLabel#streakValue {
-            color: #ff9600;
-            font-size: 17px;
+            color: #007c68;
+            font-size: 15px;
             font-weight: 800;
         }
         QLabel#xpValue {
-            color: #d9a400;
-            font-size: 17px;
+            color: #007c68;
+            font-size: 15px;
             font-weight: 800;
         }
 
@@ -408,25 +408,15 @@ QWidget* MainWindow::createHomePage() {
     auto* header = new QWidget(page);
     header->setObjectName("topBar");
     header->setAttribute(Qt::WA_StyledBackground, true);
-    auto* headerLayout = new QVBoxLayout(header);
-    headerLayout->setContentsMargins(16, 10, 16, 10);
-    headerLayout->setSpacing(7);
+    auto* headerLayout = new QHBoxLayout(header);
+    headerLayout->setContentsMargins(12, 10, 12, 10);
+    headerLayout->setSpacing(8);
 
-    auto* topRow = new QHBoxLayout;
-    topRow->setSpacing(8);
-
-    auto* who = new QVBoxLayout;
-    who->setSpacing(0);
-    homeGreeting = new QLabel(header);
-    homeGreeting->setObjectName("greeting");
-    homeGreeting->setWordWrap(true);
     homeLevel = new QLabel(header);
     homeLevel->setObjectName("muted");
-    who->addWidget(homeGreeting);
-    who->addWidget(homeLevel);
-    topRow->addLayout(who, 1);
+    headerLayout->addWidget(homeLevel, 0, Qt::AlignVCenter);
 
-    // XP stays on the greeting row; habit streaks form a compact strip below.
+    // Keep all home stats in one compact, monochrome header row.
     auto addChip = [&](QHBoxLayout* chips, const char* icon, const QColor& color,
                        const char* valueName, const QString& tooltip) {
         auto* chip = new QWidget(header);
@@ -449,26 +439,20 @@ QWidget* MainWindow::createHomePage() {
         chips->addWidget(chip);
         return value;
     };
-    homeXp = addChip(topRow, icons::bolt, QColor("#ffc800"), "xpValue", "Total XP");
-    headerLayout->addLayout(topRow);
-
-    auto* streakRow = new QHBoxLayout;
-    streakRow->setContentsMargins(0, 0, 0, 0);
-    streakRow->setSpacing(18);
-    const struct { const char* icon; const char* name; QColor color; } streaks[] = {
-        {icons::drop, "Water streak", QColor("#1cb0f6")},
-        {icons::meal, "Healthy meals streak", QColor("#ff9600")},
-        {icons::dumbbell, "Exercise streak", QColor("#ff4b4b")},
-        {icons::moon, "Sleep streak", QColor("#a560f0")}
+    const struct { const char* icon; const char* name; } streaks[] = {
+        {icons::drop, "Water streak"},
+        {icons::meal, "Healthy meals streak"},
+        {icons::dumbbell, "Exercise streak"},
+        {icons::moon, "Sleep streak"}
     };
     for (int i = 0; i < 4; ++i) {
         homeHabitStreaks.push_back(addChip(
-            streakRow, streaks[i].icon, streaks[i].color, "streakValue",
+            headerLayout, streaks[i].icon, QColor("#007c68"), "streakValue",
             QString("%1 · consecutive days").arg(streaks[i].name)
         ));
     }
-    streakRow->addStretch();
-    headerLayout->addLayout(streakRow);
+    headerLayout->addStretch(1);
+    homeXp = addChip(headerLayout, icons::bolt, QColor("#007c68"), "xpValue", "Total XP");
     layout->addWidget(header);
 
     homePath = new PathView;

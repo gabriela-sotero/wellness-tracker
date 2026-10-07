@@ -97,7 +97,6 @@ private:
     QuestCard sleepQuest;
 
     // Home header and day path are refreshed from the services whenever home opens.
-    QLabel* homeGreeting = nullptr;
     QLabel* homeLevel = nullptr;
     std::vector<QLabel*> homeHabitStreaks;
     QLabel* homeXp = nullptr;

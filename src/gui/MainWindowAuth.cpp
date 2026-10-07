@@ -90,9 +90,6 @@ void MainWindow::attemptLogin() {
 
     currentUser = user;
     loginFeedback->clear();
-    homeGreeting->setText(
-        QString("Welcome, %1!").arg(QString::fromStdString(user->getName()))
-    );
     showPage(HomePage);
 }
 

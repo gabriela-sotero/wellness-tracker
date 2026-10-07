@@ -127,13 +127,13 @@ QWidget* MainWindow::createHabitsPage() {
     overview->addWidget(hint);
     overview->addWidget(questsBar);
 
-    waterQuest = card(layout, icons::drop, QColor("#1cb0f6"), QColor("#ddf4ff"), "Water");
+    waterQuest = card(layout, icons::drop, QColor("#007c68"), QColor("#e0f2ee"), "Water");
     quickButtons(waterQuest.body, page, {{"+250 ml",250},{"+500 ml",500},{"+750 ml",750}},
                  [this](double ml) { addWater(static_cast<int>(ml)); });
     QPushButton* waterButton = nullptr;
     waterInput = customEntry(waterQuest.body, page, "Other amount in ml", waterButton);
 
-    mealQuest = card(layout, icons::meal, QColor("#ff9600"), QColor("#fff0d5"), "Meals");
+    mealQuest = card(layout, icons::meal, QColor("#007c68"), QColor("#e0f2ee"), "Meals");
     auto* meals = new QHBoxLayout;
     auto* healthy = new QPushButton("Healthy meal", page);
     auto* unhealthy = new QPushButton("Unhealthy", page);
@@ -142,11 +142,11 @@ QWidget* MainWindow::createHabitsPage() {
     meals->addWidget(unhealthy);
     mealQuest.body->addLayout(meals);
 
-    exerciseQuest = card(layout, icons::dumbbell, QColor("#ff4b4b"), QColor("#ffe0e0"), "Exercise");
+    exerciseQuest = card(layout, icons::dumbbell, QColor("#007c68"), QColor("#e0f2ee"), "Exercise");
     exerciseButton = new QPushButton("Mark as completed", page);
     exerciseQuest.body->addWidget(exerciseButton);
 
-    sleepQuest = card(layout, icons::moon, QColor("#a560f0"), QColor("#f3e5ff"), "Sleep");
+    sleepQuest = card(layout, icons::moon, QColor("#007c68"), QColor("#e0f2ee"), "Sleep");
     quickButtons(sleepQuest.body, page, {{"6 h",6},{"7 h",7},{"8 h",8},{"9 h",9}},
                  [this](double hours) { addSleep(hours); });
     QPushButton* sleepButton = nullptr;

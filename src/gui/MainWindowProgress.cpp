@@ -372,7 +372,7 @@ QWidget* MainWindow::createProfilePage() {
 
     auto* personalDetails = addCard(layout, "Personal details");
     auto* waterGoalRow = new QHBoxLayout;
-    waterGoalRow->addWidget(new QLabel("Daily water goal", page));
+    waterGoalRow->addWidget(new QLabel("Water goal", page));
     waterGoalRow->addStretch();
     profileWaterGoal = new QLabel(page);
     profileWaterGoal->setObjectName("value");

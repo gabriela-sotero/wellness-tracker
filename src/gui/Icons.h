@@ -36,7 +36,7 @@ inline constexpr const char* dumbbell = R"(<g fill="none" stroke="currentColor" 
 inline constexpr const char* moon = R"(<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor"/>)";
 
 // Full-color mark for the welcome page (drawn on a 96x100 canvas).
-inline constexpr const char* emblem = R"(<circle cx="48" cy="56" r="40" fill="#005c4d"/><circle cx="48" cy="48" r="40" fill="#007c68"/><path d="M48 22c8 11 17 18 17 29a17 17 0 0 1-34 0c0-11 9-18 17-29z" fill="#ffffff"/><path d="M41 53a7 7 0 0 0 6 7" fill="none" stroke="#007c68" stroke-width="3.2" stroke-linecap="round"/>)";
+inline constexpr const char* emblem = R"svg(<circle cx="48" cy="56" r="40" fill="#005c4d"/><circle cx="48" cy="48" r="40" fill="#007c68"/><g fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m32 29 4 4 7-8"/><path d="m32 41 4 4 7-8"/><path d="m32 53 4 4 7-8"/><path d="m32 65 4 4 7-8"/></g><g stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><path d="M49 29h16"/><path d="M49 41h16"/><path d="M49 53h16"/><path d="M49 65h16"/></g>)svg";
 
 // Renders a snippet at the given logical size, sharp on high-DPI screens.
 inline QPixmap svgPixmap(
