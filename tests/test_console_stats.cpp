@@ -68,20 +68,20 @@ static void test_daily_and_weekly_views_show_summed_xp() {
         "2\n2\n"       // View progress, then weekly
         "0\n"          // Log out
     );
-    assert(screen.find("Water intake: 1000 / 2000 ml (50%) (250 XP)")
+    assert(screen.find("Water intake: 1000 / 2000 ml (50%) (150 XP)")
            != std::string::npos);
     assert(screen.find("Meals:        1 healthy, 0 unhealthy (100 XP)")
            != std::string::npos);
     assert(screen.find("Exercise:     Completed (300 XP)")
            != std::string::npos);
-    assert(screen.find("Sleep:        4 / 8 hours (50%) (250 XP)")
+    assert(screen.find("Sleep:        4 / 8 hours (50%) (150 XP)")
            != std::string::npos);
-    assert(screen.find("Daily XP: 900") != std::string::npos);
+    assert(screen.find("Daily XP: 700") != std::string::npos);
     assert(screen.find("Level up! You reached level 3.") != std::string::npos);
     assert(screen.find("Level up! You reached level 4.") != std::string::npos);
-    assert(screen.find("Water intake: 1000 / 14000 ml (7%) (250 XP)")
+    assert(screen.find("Water intake: 1000 / 14000 ml (7%) (150 XP)")
            != std::string::npos);
-    assert(screen.find("Total XP: 900") != std::string::npos);
+    assert(screen.find("Total XP: 700") != std::string::npos);
 }
 
 static void test_profile_shows_xp_totals_and_goal_streaks() {
@@ -96,12 +96,12 @@ static void test_profile_shows_xp_totals_and_goal_streaks() {
         "0\n"            // Log out
     );
 
-    assert(screen.find("Water:     500 XP") != std::string::npos);
+    assert(screen.find("Water:     300 XP") != std::string::npos);
     assert(screen.find("Nutrition: 300 XP") != std::string::npos);
     assert(screen.find("Exercise:  300 XP") != std::string::npos);
-    assert(screen.find("Sleep:     500 XP") != std::string::npos);
-    assert(screen.find("Total:     1600 XP") != std::string::npos);
-    assert(screen.find("Level 7 (340 / 455 XP to next level)") != std::string::npos);
+    assert(screen.find("Sleep:     300 XP") != std::string::npos);
+    assert(screen.find("Total:     1200 XP") != std::string::npos);
+    assert(screen.find("Level 6 (325 / 385 XP to next level)") != std::string::npos);
     assert(screen.find("Water goal met:      1") != std::string::npos);
     assert(screen.find("3 healthy meals:     1") != std::string::npos);
     assert(screen.find("Exercise completed:  1") != std::string::npos);
