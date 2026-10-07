@@ -1,8 +1,10 @@
 #include "MainWindow.h"
 
+#include <QDate>
 #include <QHBoxLayout>
 #include <QImageReader>
 #include <QInputDialog>
+#include <QLocale>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -410,6 +412,9 @@ QWidget* MainWindow::createProfilePage() {
     levelProgressLabel->setObjectName("value");
     levelProgressBar = new QProgressBar(page);
     levelProgressBar->setTextVisible(false);
+    levelProgressBar->setStyleSheet(
+        "QProgressBar::chunk { background-color: #007c68; border-radius: 12px; }"
+    );
     levelCard->addWidget(levelProgressLabel);
     levelCard->addWidget(levelProgressBar);
 
@@ -428,6 +433,7 @@ QWidget* MainWindow::createProfilePage() {
         auto* caption = new QLabel(page);
         caption->setObjectName("muted");
         caption->setAlignment(Qt::AlignCenter);
+        caption->setWordWrap(true);
 
         column->addWidget(image);
         column->addWidget(name);
@@ -513,11 +519,15 @@ void MainWindow::showProfile() {
     const auto createdAt = database.accountCreatedAt(userId);
 
     profileName->setText(QString::fromStdString(currentUser->getName()));
-    profileMemberSince->setText(
-        createdAt.has_value()
-            ? "Member since " + QString::fromStdString(*createdAt)
-            : QString("Created before the app recorded a date")
-    );
+    if (createdAt.has_value()) {
+        const QString storedDate = QString::fromStdString(*createdAt).left(10);
+        const QDate date = QDate::fromString(storedDate, "yyyy-MM-dd");
+        profileMemberSince->setText(date.isValid()
+            ? "Member since " + QLocale(QLocale::English).toString(date, "MMMM d, yyyy")
+            : "Member since " + storedDate);
+    } else {
+        profileMemberSince->setText("Created before the app recorded a date");
+    }
     profileWaterGoal->setText(
         QString::number(currentUser->getWaterGoalMl()) + " ml/day"
     );
@@ -548,9 +558,7 @@ void MainWindow::showProfile() {
         const int badgeDays = badgeDaysFor(best[habit]);
         badgeImages[habit]->setPixmap(badgeArtwork(habits[habit], badgeDays, 80));
         badgeCaptions[habit]->setText(
-            badgeDays > 0
-                ? QString("best %1 days").arg(best[habit])
-                : QString("no badge yet")
+            QString("Best streak: %1 days").arg(best[habit])
         );
     }
 
