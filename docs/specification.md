@@ -31,10 +31,10 @@ Habit scores contribute to daily points and lifetime XP:
 
 | Habit | Scoring rule | Maximum per day |
 |---|---|---:|
-| Water | Proportional to the daily water goal; capped at the goal | 500 XP |
+| Water | Proportional to the daily water goal; capped at the goal | 300 XP |
 | Meals | 100 XP per healthy meal, up to three; 50 XP deducted per unhealthy meal, with a minimum score of zero | 300 XP before penalties |
 | Exercise | Awarded when exercise is marked complete | 300 XP |
-| Sleep | Proportional to the 8-hour goal; capped at the goal | 500 XP |
+| Sleep | Proportional to the 8-hour goal; capped at the goal | 300 XP |
 
 Lifetime XP is the sum of daily habit scores. The XP threshold to reach level `n` is:
 

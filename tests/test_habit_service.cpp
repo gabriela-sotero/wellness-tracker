@@ -100,7 +100,7 @@ static void test_period_summary_adds_up_the_range() {
     assert(summary.lastDate == dates.back());
     assert(summary.consumedWaterMl == 1500);
     assert(summary.waterGoalMl == 4000);       // 2000 ml x 2 days
-    assert(summary.waterPoints == 375);        // 250 + 125
+    assert(summary.waterPoints == 225);        // 150 + 75
     assert(summary.healthyMeals == 3);
     assert(summary.exerciseDays == 2);
     assert(summary.sleepHours == 16.0);
@@ -130,7 +130,7 @@ static void test_profile_summary_totals_xp_and_streaks() {
     HabitService service(db);
     ProfileSummary profile = service.profileSummary(userId);
 
-    assert(profile.waterXp == 1000);           // Goal met on both days.
+    assert(profile.waterXp == 600);             // Goal met on both days.
     assert(profile.exerciseXp == 600);
     assert(profile.totalXp == profile.waterXp + profile.nutritionXp
            + profile.exerciseXp + profile.sleepXp);

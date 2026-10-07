@@ -375,6 +375,22 @@ std::optional<std::string> Database::accountCreatedAt(int userId) {
     return date;
 }
 
+bool Database::updateAccountCreatedAt(int userId, const std::string& date) {
+    const char* sql = "UPDATE users SET created_at = ? WHERE id = ?;";
+    sqlite3_stmt* statement = nullptr;
+    if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
+        std::cerr << "Failed to prepare account creation date update: "
+                  << sqlite3_errmsg(db) << '\n';
+        return false;
+    }
+    sqlite3_bind_text(statement, 1, date.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(statement, 2, userId);
+    const bool success = sqlite3_step(statement) == SQLITE_DONE
+        && sqlite3_changes(db) == 1;
+    sqlite3_finalize(statement);
+    return success;
+}
+
 std::optional<std::string> Database::firstDailyRecordDate(int userId) {
     // MIN(date) establishes how far back lifetime streak and XP calculations begin.
     const char* sql = "SELECT MIN(date) FROM daily_records WHERE user_id = ?;";
