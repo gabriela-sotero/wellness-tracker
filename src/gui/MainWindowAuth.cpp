@@ -20,6 +20,7 @@ QWidget* MainWindow::createLoginPage() {
 
     auto* signIn = new QPushButton("Sign in", page);
     auto* back = new QPushButton("Back", page);
+    back->setObjectName("secondary");
     layout->addWidget(signIn);
     layout->addWidget(back);
 
@@ -52,6 +53,7 @@ QWidget* MainWindow::createSignupPage() {
 
     auto* create = new QPushButton("Create account", page);
     auto* back = new QPushButton("Back", page);
+    back->setObjectName("secondary");
     layout->addWidget(create);
     layout->addWidget(back);
 
@@ -63,7 +65,8 @@ QWidget* MainWindow::createSignupPage() {
         showPage(StartPage);
     });
 
-    return page;
+    // Six fields do not fit short windows, so this page scrolls.
+    return scrollPage(page);
 }
 
 void MainWindow::attemptLogin() {

@@ -146,38 +146,45 @@ static int percentOf(double value, double goal) {
 QWidget* MainWindow::createProgressPage() {
     // Build the reusable progress controls; period buttons supply data ranges.
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Progress", 860);
+    auto* layout = startPage(page, "Progress", 560);
 
+    // Segmented period selector. The button text doubles as the period name that
+    // showPeriod receives, which is how the active tab is found.
+    auto* tabs = new QHBoxLayout;
+    tabs->setSpacing(8);
     auto* daily = new QPushButton("Today", page);
     auto* weekly = new QPushButton("Weekly", page);
     auto* monthly = new QPushButton("Monthly", page);
     auto* yearly = new QPushButton("Yearly", page);
-    layout->addWidget(daily);
-    layout->addWidget(weekly);
-    layout->addWidget(monthly);
-    layout->addWidget(yearly);
+    for (QPushButton* tab : {daily, weekly, monthly, yearly}) {
+        tab->setObjectName("tab");
+        tabs->addWidget(tab);
+        periodTabs.push_back(tab);
+    }
+    layout->addLayout(tabs);
 
     progressHeading = new QLabel(page);
+    progressHeading->setObjectName("heading");
     progressHeading->setWordWrap(true);
     layout->addWidget(progressHeading);
 
+    auto* overall = addCard(layout, QString());
     progressOverall = new QLabel(page);
     progressOverall->setObjectName("value");
-    layout->addWidget(progressOverall);
+    overall->addWidget(progressOverall);
     progressOverallBar = new QProgressBar(page);
     progressOverallBar->setFormat("%v of %m daily goals met");
-    layout->addWidget(progressOverallBar);
+    overall->addWidget(progressOverallBar);
 
-    waterRow = addProgressRow(layout, "Water");
-    mealsRow = addProgressRow(layout, "Meals");
-    exerciseRow = addProgressRow(layout, "Exercise");
-    sleepRow = addProgressRow(layout, "Sleep");
+    // Each habit gets its own card; the rows are filled by showPeriod.
+    waterRow = addProgressRow(addCard(layout, QString()), "Water");
+    mealsRow = addProgressRow(addCard(layout, QString()), "Meals");
+    exerciseRow = addProgressRow(addCard(layout, QString()), "Exercise");
+    sleepRow = addProgressRow(addCard(layout, QString()), "Sleep");
 
     progressTotal = new QLabel(page);
+    progressTotal->setObjectName("total");
     layout->addWidget(progressTotal);
-
-    auto* back = new QPushButton("Back", page);
-    layout->addWidget(back);
 
     connect(daily, &QPushButton::clicked, this, [this] {
         showPeriod("Today", {util::today()});
@@ -191,10 +198,8 @@ QWidget* MainWindow::createProgressPage() {
     connect(yearly, &QPushButton::clicked, this, [this] {
         showPeriod("Yearly", util::yearToDate(), true);
     });
-    connect(back, &QPushButton::clicked, this, [this] {
-        showPage(HomePage);
-    });
-    return page;
+    // Five cards are taller than a short window, so this page scrolls.
+    return scrollPage(page);
 }
 
 void MainWindow::showPeriod(
@@ -203,6 +208,10 @@ void MainWindow::showPeriod(
     bool toDate
 ) {
     // The service owns aggregation; this method maps its summary into widgets.
+    for (QPushButton* tab : periodTabs) {
+        setActive(tab, tab->text() == period);
+    }
+
     const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
 
     if (summary.days == 0) {
@@ -227,8 +236,10 @@ void MainWindow::showPeriod(
     }
 
     if (summary.days == 1) {
+        // A single day may be today or one picked from the home path's history.
+        const QString when = period == "Today" ? QString("today") : QString("that day");
         progressOverall->setText(
-            "Goals completed today · " + QString::number(summary.overallGoalsMet) + " / 4"
+            "Goals completed " + when + " · " + QString::number(summary.overallGoalsMet) + " / 4"
         );
         progressOverallBar->setRange(0, 4);
         progressOverallBar->setValue(summary.overallGoalsMet);
@@ -255,7 +266,7 @@ void MainWindow::showPeriod(
             summary.exerciseDays > 0 ? "Exercise · Completed" : "Exercise · Not completed",
             summary.exerciseDays,
             1,
-            summary.exerciseDays > 0 ? "Completed today" : "Not completed today"
+            summary.exerciseDays > 0 ? "Completed " + when : "Not completed " + when
         );
         fillDailyProgressRow(
             sleepRow,
@@ -265,7 +276,7 @@ void MainWindow::showPeriod(
             static_cast<int>(summary.sleepGoalHours * 10),
             QString::number(summary.sleepHours, 'f', 1) + " hours recorded"
         );
-        progressTotal->setText("Points earned today: " + QString::number(summary.totalPoints));
+        progressTotal->setText("Points earned " + when + ": " + QString::number(summary.totalPoints));
         showPage(ProgressPage);
         return;
     }
@@ -338,7 +349,7 @@ static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
 QWidget* MainWindow::createProfilePage() {
     // Construct profile widgets once so showProfile can refresh the same controls.
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Profile", 860);
+    auto* layout = startPage(page, "Profile", 560);
 
     auto* account = addCard(layout, QString());
     profileName = new QLabel(page);
@@ -356,7 +367,8 @@ QWidget* MainWindow::createProfilePage() {
     profileWaterGoal->setObjectName("value");
     waterGoalRow->addWidget(profileWaterGoal);
     auto* editWaterGoal = new QPushButton("Edit", page);
-    editWaterGoal->setMinimumWidth(100);
+    editWaterGoal->setObjectName("secondary");
+    editWaterGoal->setMinimumWidth(90);
     waterGoalRow->addWidget(editWaterGoal);
     personalDetails->addLayout(waterGoalRow);
 
@@ -370,7 +382,8 @@ QWidget* MainWindow::createProfilePage() {
     profileWeight->setObjectName("value");
     weightRow->addWidget(profileWeight);
     auto* editWeightButton = new QPushButton("Edit", profileWeightRow);
-    editWeightButton->setMinimumWidth(100);
+    editWeightButton->setObjectName("secondary");
+    editWeightButton->setMinimumWidth(90);
     weightRow->addWidget(editWeightButton);
     personalDetails->addWidget(profileWeightRow);
 
@@ -428,15 +441,10 @@ QWidget* MainWindow::createProfilePage() {
         streakValues.push_back(addCardRow(streaks, goal));
     }
 
-    auto* back = new QPushButton("Back", page);
     auto* deleteAccount = new QPushButton("Delete account", page);
-    deleteAccount->setStyleSheet("color: #a32121;");
-    layout->addWidget(back);
+    deleteAccount->setObjectName("danger");
     layout->addWidget(deleteAccount);
 
-    connect(back, &QPushButton::clicked, this, [this] {
-        showPage(HomePage);
-    });
     connect(deleteAccount, &QPushButton::clicked, this, [this] {
         if (!currentUser.has_value()) {
             return;
@@ -483,7 +491,8 @@ QWidget* MainWindow::createProfilePage() {
                            "Your account and associated data were deleted.");
     });
 
-    return page;
+    // The profile cards are taller than a short window, so this page scrolls.
+    return scrollPage(page);
 }
 
 void MainWindow::showProfile() {

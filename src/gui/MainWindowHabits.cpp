@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -9,32 +10,36 @@
 #include "PageLayout.h"
 
 QWidget* MainWindow::createHabitsPage() {
-    // Construct entry controls and connect Qt signals to focused logging methods.
+    // One card per habit; Qt signals connect to focused logging methods below.
+    // Navigation lives in the bottom bar, so this page has no Back button.
     auto* page = new QWidget;
     auto* layout = startPage(page, "Log habits");
 
-    waterInput = addField(layout, "Water in ml");
+    auto* water = addCard(layout, "Water");
+    waterInput = addField(water, "Amount in ml");
     auto* logWaterButton = new QPushButton("Log water", page);
-    layout->addWidget(logWaterButton);
+    water->addWidget(logWaterButton);
 
-    layout->addWidget(new QLabel("Meal", page));
-    auto* healthyMeal = new QPushButton("Log healthy meal", page);
-    auto* unhealthyMeal = new QPushButton("Log unhealthy meal", page);
-    layout->addWidget(healthyMeal);
-    layout->addWidget(unhealthyMeal);
+    auto* meal = addCard(layout, "Meal");
+    auto* mealRow = new QHBoxLayout;
+    mealRow->setSpacing(10);
+    auto* healthyMeal = new QPushButton("Healthy", page);
+    auto* unhealthyMeal = new QPushButton("Unhealthy", page);
+    unhealthyMeal->setObjectName("secondary");
+    mealRow->addWidget(healthyMeal);
+    mealRow->addWidget(unhealthyMeal);
+    meal->addLayout(mealRow);
 
-    layout->addWidget(new QLabel("Exercise", page));
-    auto* exercise = new QPushButton("Mark exercise as completed", page);
-    layout->addWidget(exercise);
+    auto* exerciseCard = addCard(layout, "Exercise");
+    auto* exercise = new QPushButton("Mark as completed", page);
+    exerciseCard->addWidget(exercise);
 
-    sleepInput = addField(layout, "Sleep in hours");
+    auto* sleep = addCard(layout, "Sleep");
+    sleepInput = addField(sleep, "Hours slept");
     auto* logSleepButton = new QPushButton("Log sleep", page);
-    layout->addWidget(logSleepButton);
+    sleep->addWidget(logSleepButton);
 
     habitFeedback = addFeedback(layout);
-
-    auto* back = new QPushButton("Back", page);
-    layout->addWidget(back);
 
     connect(logWaterButton, &QPushButton::clicked, this, [this] {
         logWater();
@@ -57,11 +62,9 @@ QWidget* MainWindow::createHabitsPage() {
     connect(sleepInput, &QLineEdit::returnPressed, this, [this] {
         logSleep();
     });
-    connect(back, &QPushButton::clicked, this, [this] {
-        showPage(HomePage);
-    });
 
-    return page;
+    // Four cards are taller than a short window, so this page scrolls.
+    return scrollPage(page);
 }
 
 // Reports what was logged in green, and input problems in red.

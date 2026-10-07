@@ -10,9 +10,13 @@
 #include "HabitService.h"
 #include "User.h"
 
+class PathView;
+class QDate;
 class QLabel;
 class QLineEdit;
 class QProgressBar;
+class QPushButton;
+class QScrollArea;
 class QStackedWidget;
 class QVBoxLayout;
 
@@ -51,6 +55,11 @@ private:
     // Owns the screen widgets and switches which page is visible.
     QStackedWidget* pages = nullptr;
 
+    // Bottom bar shown on signed-in pages: home, log, profile and sign out.
+    // The buttons are owned by the bar; the order matches the icons in createNavBar.
+    QWidget* navBar = nullptr;
+    std::vector<QPushButton*> navButtons;
+
     // Non-owning pointers to controls owned by their respective page widgets.
     // Authentication controls are stored here so event handlers can read or clear them.
     QLineEdit* loginUsername = nullptr;
@@ -70,8 +79,15 @@ private:
     QLineEdit* sleepInput = nullptr;
     QLabel* habitFeedback = nullptr;
 
-    // Home greeting is filled after a user authenticates.
+    // Home header and day path are refreshed from the services whenever home opens.
     QLabel* homeGreeting = nullptr;
+    QLabel* homeLevel = nullptr;
+    QLabel* homeStreak = nullptr;
+    QLabel* homeXp = nullptr;
+    QScrollArea* homeScroll = nullptr;
+    PathView* homePath = nullptr;
+    // Guards against re-entering the scroll handler while history is being added.
+    bool extendingPath = false;
 
     // Profile labels and collections are refreshed from ProfileSummary on entry.
     QLabel* profileName = nullptr;
@@ -95,6 +111,8 @@ private:
     ProgressRow exerciseRow;
     ProgressRow sleepRow;
     QLabel* progressTotal = nullptr;
+    // Period selector buttons; the one matching the shown period is highlighted.
+    std::vector<QPushButton*> periodTabs;
 
     // Page factories build each screen once; navigation reuses those widgets.
     QWidget* createStartPage();
@@ -105,8 +123,21 @@ private:
     QWidget* createProgressPage();
     QWidget* createProfilePage();
 
+    // Builds the bottom navigation bar once; showPage toggles its visibility.
+    QWidget* createNavBar();
+
     // Selects a page in the stack by its enum value.
     void showPage(Page page);
+    // Highlights the nav button that owns the page being shown.
+    void updateNav(Page page);
+    // Reloads the header stats and resets the path so today is in view.
+    void refreshHome();
+    // Loads more history when the path is scrolled to the top, and more locked
+    // days when it is scrolled to the bottom.
+    void extendPathAtEdges(int scrollValue);
+    // How many of the four daily goals the signed-in user met on a date, or -1
+    // when the service has nothing for it.
+    int goalsMetOn(const QDate& date);
 
     // Logged-out actions.
     // Validate form input before asking Database to create or authenticate an account.
