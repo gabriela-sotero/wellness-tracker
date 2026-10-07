@@ -3,7 +3,9 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QScrollArea>
 #include <QSizePolicy>
+#include <QStyle>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -44,6 +46,25 @@ inline QVBoxLayout* startPage(
     layout->addWidget(label);
 
     return layout;
+}
+
+// Wraps a page in a scroll area so tall pages scroll instead of forcing the
+// window to grow. The page keeps its centered column inside the viewport.
+inline QWidget* scrollPage(QWidget* page) {
+    auto* area = new QScrollArea;
+    area->setWidgetResizable(true);
+    area->setFrameShape(QFrame::NoFrame);
+    area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    area->setWidget(page);
+    return area;
+}
+
+// Flips the "active" property that stylesheet rules like [active="true"] read,
+// then re-applies the style so the change shows up.
+inline void setActive(QWidget* widget, bool active) {
+    widget->setProperty("active", active);
+    widget->style()->unpolish(widget);
+    widget->style()->polish(widget);
 }
 
 // Adds a labelled text field and returns it.

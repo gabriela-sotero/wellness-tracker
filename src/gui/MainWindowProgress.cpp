@@ -1,8 +1,10 @@
 #include "MainWindow.h"
 
+#include <QDate>
 #include <QHBoxLayout>
 #include <QImageReader>
 #include <QInputDialog>
+#include <QLocale>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -91,15 +93,18 @@ void showAccountMessage(
 
 // Adds a habit row, starting empty until a period is chosen.
 static ProgressRow addProgressRow(QVBoxLayout* layout, const QString& name) {
-    // Return widget pointers because later period selections update these controls.
     QWidget* page = layout->parentWidget();
-
     ProgressRow row;
     row.label = new QLabel(name, page);
+    row.label->setObjectName("cardTitle");
+    row.detail = new QLabel(page);
+    row.detail->setObjectName("muted");
     row.bar = new QProgressBar(page);
+    row.bar->setTextVisible(false);
+    row.bar->setMaximumHeight(10);
     layout->addWidget(row.label);
+    layout->addWidget(row.detail);
     layout->addWidget(row.bar);
-
     return row;
 }
 
@@ -113,14 +118,13 @@ static void fillProgressRow(
     int totalDays,
     const QString& detail
 ) {
+    Q_UNUSED(rateDescription);
     // Long-period values show goal frequency; detail text preserves raw totals.
     const int percent = totalDays > 0 ? metDays * 100 / totalDays : 0;
-    row.label->setText(
-        name + " · " + rateDescription.arg(percent)
-    );
+    row.label->setText(name + " · " + QString::number(percent) + "%");
+    row.detail->setText(detail);
     row.bar->setRange(0, totalDays > 0 ? totalDays : 1);
     row.bar->setValue(metDays);
-    row.bar->setFormat(detail);
 }
 
 static void fillDailyProgressRow(
@@ -132,9 +136,9 @@ static void fillDailyProgressRow(
 ) {
     // A one-day view displays measured amounts rather than a percentage of days.
     row.label->setText(label);
+    row.detail->setText(detail);
     row.bar->setRange(0, maximum > 0 ? maximum : 1);
     row.bar->setValue(std::min(value, maximum));
-    row.bar->setFormat(detail);
 }
 
 // Percent of a goal, reported past 100% when the goal is beaten.
@@ -146,38 +150,46 @@ static int percentOf(double value, double goal) {
 QWidget* MainWindow::createProgressPage() {
     // Build the reusable progress controls; period buttons supply data ranges.
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Progress", 860);
+    auto* layout = startPage(page, "Progress", 500);
 
+    // Segmented period selector. The button text doubles as the period name that
+    // showPeriod receives, which is how the active tab is found.
+    auto* tabs = new QHBoxLayout;
+    tabs->setSpacing(8);
     auto* daily = new QPushButton("Today", page);
     auto* weekly = new QPushButton("Weekly", page);
     auto* monthly = new QPushButton("Monthly", page);
     auto* yearly = new QPushButton("Yearly", page);
-    layout->addWidget(daily);
-    layout->addWidget(weekly);
-    layout->addWidget(monthly);
-    layout->addWidget(yearly);
+    for (QPushButton* tab : {daily, weekly, monthly, yearly}) {
+        tab->setObjectName("tab");
+        tabs->addWidget(tab);
+        periodTabs.push_back(tab);
+    }
+    layout->addLayout(tabs);
 
     progressHeading = new QLabel(page);
+    progressHeading->setObjectName("muted");
     progressHeading->setWordWrap(true);
     layout->addWidget(progressHeading);
 
+    auto* overall = addCard(layout, QString());
     progressOverall = new QLabel(page);
-    progressOverall->setObjectName("value");
-    layout->addWidget(progressOverall);
+    progressOverall->setObjectName("heading");
+    overall->addWidget(progressOverall);
     progressOverallBar = new QProgressBar(page);
-    progressOverallBar->setFormat("%v of %m daily goals met");
-    layout->addWidget(progressOverallBar);
+    progressOverallBar->setTextVisible(false);
+    overall->addWidget(progressOverallBar);
 
-    waterRow = addProgressRow(layout, "Water");
-    mealsRow = addProgressRow(layout, "Meals");
-    exerciseRow = addProgressRow(layout, "Exercise");
-    sleepRow = addProgressRow(layout, "Sleep");
+    auto* habits = addCard(layout, "Habits");
+    habits->setSpacing(12);
+    waterRow = addProgressRow(habits, "Water");
+    mealsRow = addProgressRow(habits, "Meals");
+    exerciseRow = addProgressRow(habits, "Exercise");
+    sleepRow = addProgressRow(habits, "Sleep");
 
     progressTotal = new QLabel(page);
+    progressTotal->setObjectName("muted");
     layout->addWidget(progressTotal);
-
-    auto* back = new QPushButton("Back", page);
-    layout->addWidget(back);
 
     connect(daily, &QPushButton::clicked, this, [this] {
         showPeriod("Today", {util::today()});
@@ -191,10 +203,8 @@ QWidget* MainWindow::createProgressPage() {
     connect(yearly, &QPushButton::clicked, this, [this] {
         showPeriod("Yearly", util::yearToDate(), true);
     });
-    connect(back, &QPushButton::clicked, this, [this] {
-        showPage(HomePage);
-    });
-    return page;
+    // Five cards are taller than a short window, so this page scrolls.
+    return scrollPage(page);
 }
 
 void MainWindow::showPeriod(
@@ -203,10 +213,24 @@ void MainWindow::showPeriod(
     bool toDate
 ) {
     // The service owns aggregation; this method maps its summary into widgets.
+    for (QPushButton* tab : periodTabs) {
+        setActive(tab, tab->text() == period);
+    }
+
     const PeriodSummary summary = habitService.periodSummary(currentUser->getId(), dates);
 
     if (summary.days == 0) {
         progressHeading->setText("No days to show.");
+        progressOverall->setText("No habit data in this period yet.");
+        progressOverallBar->setRange(0, 1);
+        progressOverallBar->setValue(0);
+        for (const ProgressRow* row : {&waterRow, &mealsRow, &exerciseRow, &sleepRow}) {
+            row->label->setText("No data");
+            row->detail->clear();
+            row->bar->setRange(0, 1);
+            row->bar->setValue(0);
+        }
+        progressTotal->clear();
         showPage(ProgressPage);
         return;
     }
@@ -219,17 +243,16 @@ void MainWindow::showPeriod(
         );
     } else {
         progressHeading->setText(
-            period + " - " + QString::number(summary.days)
-                + (toDate ? " days so far\n(" : " days\n(")
-                + QString::fromStdString(summary.firstDate) + " to "
-                + QString::fromStdString(summary.lastDate) + ")"
+            QString::number(summary.days) + (toDate ? " days so far · " : " days · ")
+                + QString::fromStdString(summary.firstDate) + " – "
+                + QString::fromStdString(summary.lastDate)
         );
     }
 
     if (summary.days == 1) {
-        progressOverall->setText(
-            "Goals completed today · " + QString::number(summary.overallGoalsMet) + " / 4"
-        );
+        // A single day may be today or one picked from the home path's history.
+        const QString when = period == "Today" ? QString("today") : QString("that day");
+        progressOverall->setText(QString::number(summary.overallGoalsMet) + " of 4 goals");
         progressOverallBar->setRange(0, 4);
         progressOverallBar->setValue(summary.overallGoalsMet);
 
@@ -255,7 +278,7 @@ void MainWindow::showPeriod(
             summary.exerciseDays > 0 ? "Exercise · Completed" : "Exercise · Not completed",
             summary.exerciseDays,
             1,
-            summary.exerciseDays > 0 ? "Completed today" : "Not completed today"
+            summary.exerciseDays > 0 ? "Completed " + when : "Not completed " + when
         );
         fillDailyProgressRow(
             sleepRow,
@@ -265,18 +288,22 @@ void MainWindow::showPeriod(
             static_cast<int>(summary.sleepGoalHours * 10),
             QString::number(summary.sleepHours, 'f', 1) + " hours recorded"
         );
-        progressTotal->setText("Points earned today: " + QString::number(summary.totalPoints));
+        progressTotal->setText("XP earned " + when + " · " + QString::number(summary.totalPoints));
         showPage(ProgressPage);
         return;
     }
 
-    const int goalOpportunities = summary.days * 4;
-    const int overallPercent = percentOf(summary.overallGoalsMet, goalOpportunities);
+    // The ranges passed by Today, Weekly, Monthly and Yearly stop at today,
+    // so summary.days is the number of elapsed days, not the calendar period's
+    // eventual length (for example, month-to-date instead of the full month).
+    const int elapsedGoalOpportunities = summary.days * 4;
+    const int overallPercent = percentOf(summary.overallGoalsMet, elapsedGoalOpportunities);
     progressOverall->setText(
-        "Overall habit consistency · " + QString::number(overallPercent) + "%"
+        QString("%1% consistency · %2 of %3 goals")
+            .arg(overallPercent).arg(summary.overallGoalsMet).arg(elapsedGoalOpportunities)
     );
-    progressOverallBar->setRange(0, goalOpportunities > 0 ? goalOpportunities : 1);
-    progressOverallBar->setValue(summary.overallGoalsMet);
+    progressOverallBar->setRange(0, 100);
+    progressOverallBar->setValue(overallPercent);
 
     const double averageWater =
         static_cast<double>(summary.consumedWaterMl) / summary.days;
@@ -314,11 +341,8 @@ void MainWindow::showPeriod(
             + QString::number(averageSleep, 'f', 1) + " h/night"
     );
 
-    progressTotal->setText(
-        "Average daily score: "
-            + QString::number(static_cast<double>(summary.totalPoints) / summary.days, 'f', 0)
-            + " XP"
-    );
+    progressTotal->setText("Average XP per day · "
+        + QString::number(static_cast<double>(summary.totalPoints) / summary.days, 'f', 0));
     showPage(ProgressPage);
 }
 
@@ -338,7 +362,7 @@ static QPixmap badgeArtwork(const QString& habit, int badgeDays, int width) {
 QWidget* MainWindow::createProfilePage() {
     // Construct profile widgets once so showProfile can refresh the same controls.
     auto* page = new QWidget;
-    auto* layout = startPage(page, "Profile", 860);
+    auto* layout = startPage(page, "Profile", 560);
 
     auto* account = addCard(layout, QString());
     profileName = new QLabel(page);
@@ -350,13 +374,14 @@ QWidget* MainWindow::createProfilePage() {
 
     auto* personalDetails = addCard(layout, "Personal details");
     auto* waterGoalRow = new QHBoxLayout;
-    waterGoalRow->addWidget(new QLabel("Daily water goal", page));
+    waterGoalRow->addWidget(new QLabel("Water goal", page));
     waterGoalRow->addStretch();
     profileWaterGoal = new QLabel(page);
     profileWaterGoal->setObjectName("value");
     waterGoalRow->addWidget(profileWaterGoal);
     auto* editWaterGoal = new QPushButton("Edit", page);
-    editWaterGoal->setMinimumWidth(100);
+    editWaterGoal->setObjectName("secondary");
+    editWaterGoal->setMinimumWidth(90);
     waterGoalRow->addWidget(editWaterGoal);
     personalDetails->addLayout(waterGoalRow);
 
@@ -370,7 +395,8 @@ QWidget* MainWindow::createProfilePage() {
     profileWeight->setObjectName("value");
     weightRow->addWidget(profileWeight);
     auto* editWeightButton = new QPushButton("Edit", profileWeightRow);
-    editWeightButton->setMinimumWidth(100);
+    editWeightButton->setObjectName("secondary");
+    editWeightButton->setMinimumWidth(90);
     weightRow->addWidget(editWeightButton);
     personalDetails->addWidget(profileWeightRow);
 
@@ -386,6 +412,9 @@ QWidget* MainWindow::createProfilePage() {
     levelProgressLabel->setObjectName("value");
     levelProgressBar = new QProgressBar(page);
     levelProgressBar->setTextVisible(false);
+    levelProgressBar->setStyleSheet(
+        "QProgressBar::chunk { background-color: #007c68; border-radius: 12px; }"
+    );
     levelCard->addWidget(levelProgressLabel);
     levelCard->addWidget(levelProgressBar);
 
@@ -404,6 +433,7 @@ QWidget* MainWindow::createProfilePage() {
         auto* caption = new QLabel(page);
         caption->setObjectName("muted");
         caption->setAlignment(Qt::AlignCenter);
+        caption->setWordWrap(true);
 
         column->addWidget(image);
         column->addWidget(name);
@@ -428,15 +458,10 @@ QWidget* MainWindow::createProfilePage() {
         streakValues.push_back(addCardRow(streaks, goal));
     }
 
-    auto* back = new QPushButton("Back", page);
     auto* deleteAccount = new QPushButton("Delete account", page);
-    deleteAccount->setStyleSheet("color: #a32121;");
-    layout->addWidget(back);
+    deleteAccount->setObjectName("danger");
     layout->addWidget(deleteAccount);
 
-    connect(back, &QPushButton::clicked, this, [this] {
-        showPage(HomePage);
-    });
     connect(deleteAccount, &QPushButton::clicked, this, [this] {
         if (!currentUser.has_value()) {
             return;
@@ -483,7 +508,8 @@ QWidget* MainWindow::createProfilePage() {
                            "Your account and associated data were deleted.");
     });
 
-    return page;
+    // The profile cards are taller than a short window, so this page scrolls.
+    return scrollPage(page);
 }
 
 void MainWindow::showProfile() {
@@ -493,11 +519,15 @@ void MainWindow::showProfile() {
     const auto createdAt = database.accountCreatedAt(userId);
 
     profileName->setText(QString::fromStdString(currentUser->getName()));
-    profileMemberSince->setText(
-        createdAt.has_value()
-            ? "Member since " + QString::fromStdString(*createdAt)
-            : QString("Created before the app recorded a date")
-    );
+    if (createdAt.has_value()) {
+        const QString storedDate = QString::fromStdString(*createdAt).left(10);
+        const QDate date = QDate::fromString(storedDate, "yyyy-MM-dd");
+        profileMemberSince->setText(date.isValid()
+            ? "Member since " + QLocale(QLocale::English).toString(date, "MMMM d, yyyy")
+            : "Member since " + storedDate);
+    } else {
+        profileMemberSince->setText("Created before the app recorded a date");
+    }
     profileWaterGoal->setText(
         QString::number(currentUser->getWaterGoalMl()) + " ml/day"
     );
@@ -528,9 +558,7 @@ void MainWindow::showProfile() {
         const int badgeDays = badgeDaysFor(best[habit]);
         badgeImages[habit]->setPixmap(badgeArtwork(habits[habit], badgeDays, 80));
         badgeCaptions[habit]->setText(
-            badgeDays > 0
-                ? QString("best %1 days").arg(best[habit])
-                : QString("no badge yet")
+            QString("Best streak: %1 days").arg(best[habit])
         );
     }
 
