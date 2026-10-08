@@ -29,12 +29,12 @@ Records are stored by user and date. Repeated water, meal, and sleep entries for
 
 Habit scores contribute to daily points and lifetime XP:
 
-| Habit | Scoring rule | Maximum per day |
+| Classe | Regra de `calculateScore()` | Máximo por dia |
 |---|---|---:|
-| Water | Proportional to the daily water goal; capped at the goal | 300 XP |
-| Meals | 100 XP per healthy meal, up to three; 50 XP deducted per unhealthy meal, with a minimum score of zero | 300 XP before penalties |
-| Exercise | Awarded when exercise is marked complete | 300 XP |
-| Sleep | Proportional to the 8-hour goal; capped at the goal | 300 XP |
+| `WaterHabit` | `consumo em ml / meta em ml × 300`, limitado à meta (100% de progresso) | 300 XP |
+| `NutritionHabit` | `refeições saudáveis / meta × 300` (meta padrão: 3), menos 50 por refeição não saudável; mínimo 0 | 300 XP antes das penalidades |
+| `ExerciseHabit` | 300 se o exercício foi marcado como concluído; 0 caso contrário | 300 XP |
+| `SleepHabit` | `horas dormidas / meta × 300`, limitado à meta (100% de progresso); meta padrão: 8 h | 300 XP |
 
 Lifetime XP is the sum of daily habit scores. The XP threshold to reach level `n` is:
 
