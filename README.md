@@ -19,18 +19,25 @@ The console and GUI share `data/wellness.db`. Run either app from the repository
 wellness-tracker/
 ├── CMakeLists.txt
 ├── README.md
-├── docs/
-│   └── specification.md
-├── data/
-│   └── .gitkeep
 ├── assets/
-│   └── badges/
-├── include/
+│   ├── badges/             # Habit streak badge artwork
+│   └── icons/              # GUI icons
+├── data/
+│   └── .gitkeep             # Runtime SQLite database location
+├── docs/
+│   ├── img/                 # Project screenshots
+│   ├── index.html            # GitHub Pages site
+│   ├── report.pdf            # Project report
+│   ├── specification.md      # Course scope and design notes
+│   └── style.css             # GitHub Pages styles
+├── include/                 # Core public headers
 ├── src/
-│   └── gui/
-├── tests/
+│   ├── gui/                  # Qt Widgets interface
+│   └──                       # Core logic and console interface
+├── tests/                    # Automated tests
 └── tools/
-    └── generate_badges.py
+    ├── generate_badges.py    # Badge artwork generator
+    └── seed_demo_profile.cpp # Demo profile seeder
 ```
 
 ## Documentation
