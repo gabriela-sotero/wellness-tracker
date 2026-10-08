@@ -238,7 +238,7 @@ MainWindow::MainWindow(Database& database, QWidget* parent)
             text-align: center;
         }
         QProgressBar::chunk {
-            background-color: #7fd0c1;
+            background-color: #007c68;
             border-radius: 12px;
         }
     )qss");
